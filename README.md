@@ -39,17 +39,17 @@ Hopefully there will be much better ways to approach this project soon.
 ## Roadmap
 Currently there are some open approaches we are working on:
 
-- Prototyping [prototyping](https://img.shields.io/badge/status-wip-orange.svg?style=flat-square): first attempt to write the bare minimum information for the language, i.e.: a lexer, parser, syntax tree, interpreter. All in Python and all in English for prototyping purposes.
+- Prototyping [![prototyping](https://img.shields.io/badge/status-wip-orange.svg?style=flat-square)](https://github.com/Doomsk/c_dagger): first attempt to write the bare minimum information for the language, i.e.: a lexer, parser, syntax tree, interpreter. All in Python and all in English for prototyping purposes.
 	- Lexer: writing the first lexer to get an idea how the language should look like.
 	- Parser: writing the first parser to understand how the syntax should look like.
 	- Interpreter: writing the first interpreter to understand how the code should interact.
 	- Compiler language choice: choose the programming language in which C† should be seriously developed at first (C, C++, Rust?).
-- First Compiler [fcomp](https://img.shields.io/badge/status-not%20started-yellow.svg?style=flat-square): write the memory handling, choose the first bult-in actions to develop.
+- First Compiler [![fcomp](https://img.shields.io/badge/status-not%20started-yellow.svg?style=flat-square)](https://github.com/Doomsk/c_dagger): write the memory handling, choose the first bult-in actions to develop.
 	- Lexer
 	- Parser
 	- Compiler
 	- Data Analyzer: should it be Julia in the end?
-- First Quantum Hardware Implementation [fqhi](https://img.shields.io/badge/status-not%20started-yellow.svg?style=flat-square): attempt to implement some code on C† to deal with pulses and other instructions as read and write from and to quantum processors.
+- First Quantum Hardware Implementation [![fqhi](https://img.shields.io/badge/status-not%20started-yellow.svg?style=flat-square)](https://github.com/Doomsk/c_dagger): attempt to implement some code on C† to deal with pulses and other instructions as read and write from and to quantum processors.
 	- Hardware interaction: will it be Intel/ARM/FPGA/other hardware to receive data from C†?
 	- Native hardware: which hardware will it be most efficient to be implemented on?
 	- Instructions channel: which channel to communicate via local, lan and wan?
