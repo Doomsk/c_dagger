@@ -1,3 +1,4 @@
+# currently used
 import cdag.cdag.gpp.yacc as yacc
 from cdag.cdag.gpp.gpp_lex import tokens, actions
 
@@ -18,9 +19,13 @@ def p_sentence(p):
                 | subject sup_sentence
                 """
     if len(p) == 2:
+        print('sentence (2)', p[1])
         p[0] = p[1]
     elif len(p) == 3:
         p[0] = p[1] + p[2]
+        print('sentence (3)', p[0])
+    else:
+        print('sentence passou')
 
 
 def p_sup_sentence(p):
@@ -42,8 +47,12 @@ def p_subject(p):
             p[0] = nonull({'subject': p[1]}) + nonull(p[3]) + p[4]
         else:
             p[0] = nonull({'subject': p[1]}) + nonull(p[3])
+        print('subject (5)', p[0])
     elif len(p) == 4:
         p[0] = nonull({'subject': p[1]}) + nonull(p[3])
+        print('subject (4)', p[0])
+    else:
+        print('subject passou')
 
 
 def p_action0(p):
@@ -52,10 +61,15 @@ def p_action0(p):
                 """
     if len(p[3]) == 1:
         p[3] = tuple(p[3])
+
     if len(p) == 5:
         p[0] = nonull({'action': p[1], 'object': p[3]})
+        print('action0 (5)', p[0])
     elif len(p) == 6:
         p[0] = nonull({'action': p[1], 'object': p[3]}) + p[5]
+        print('action0 (6)', p[0])
+    else:
+        print('action0 passou')
 
 
 def p_action1(p):
@@ -70,25 +84,34 @@ def p_action1(p):
                 | extendaction lbracket superobject rbracket loop1 as attr loop1 action"""
     if len(p[3]) == 1:
         p[3] = tuple(p[3])
+
     if len(p) == 5:
         p[0] = nonull({'action': p[1], 'object': p[3]})
+        print('action1 (5)', p[0])
     elif len(p) == 6:
         if isinstance(p[5], tuple):
             if len(p[5]) > 1:
                 if len(p[5][1]) == 4 and isinstance(p[5][1], tuple):
                     if p[5][1][0] == '_':
                         p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5][1]})
+                    else:
+                        print('no _ on 5-1-0')
                 else:
+                    print('no tuple 5-1', p[5])
                     p[0] = ({'action': p[1], 'object': p[3]},) + p[5]
             else:
+                print('len p[5] == 1', p[5])
+                print(p[1], p[3], p[5])
                 p[0] = ({'action': p[1], 'object': p[3]},) + p[5]
         else:
             p[0] = nonull({'action': p[1], 'object': p[3]}) + p[5]
+        print('action1 (6)', p[0])
     elif len(p) == 7:
         if p[5] == 'as':
             if not isinstance(p[6], tuple):
                 p[6] = (p[6],)
             p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6]})
+        print('action1 (7)', p[0])
     elif len(p) == 8:
         if p[5] == 'as':
             if not isinstance(p[6], tuple):
@@ -98,6 +121,7 @@ def p_action1(p):
                 if len(p[6]) == 2:
                     if isinstance(p[6][1], dict):
                         if 'attr_loop' in p[6][1].keys():
+                            print('attrloop')
                             x_ = {'action': p[1], 'object': p[3], 'attr': (p[6][0],)}
                             x_.update(p[6][1])
                             p[0] = (x_,) + p[7]
@@ -109,16 +133,21 @@ def p_action1(p):
                     p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6]}) + p[7]
         else:
             p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': (p[7],)})
+        print('action1 (8)', p[0])
     elif len(p) == 9:
         if isinstance(p[5], tuple) and len(p[5][1]) == 4 and p[5][1][0] == '_':
+            print('fac91')
             if not isinstance(p[7], tuple):
+                print('7notuple')
                 p[7] = (p[7],)
                 p[0] = nonull(
                         {'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': p[7]}) + p[8]
             else:
+                print('7tuple')
                 if len(p[7]) == 2:
                     if isinstance(p[7][1], dict):
                         if 'attr_loop' in p[7][1].keys():
+                            print('attrloop')
                             x_ = {'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': (
                             p[7][0],)}
                             x_.update(p[7][1])
@@ -137,15 +166,22 @@ def p_action1(p):
         else:
             if isinstance(p[8], tuple) and len(p[8]) == 4:
                 if isinstance(p[8][1], tuple) and p[8][1][0] == '_':
+                    print('fac92')
                     p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5], 'attr': (p[7],), 'attr_loop': p[8][1]})
                 else:
+                    print('fac93')
                     p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5], 'attr': (
                     p[7],), 'attr_loop': p[8]})
             else:
+                print('fac94')
                 p[0] = nonull(
                     {'action': p[1], 'object': p[3], 'obj_loop': p[5], 'attr': (p[7],)}) + p[8]
+        print('action1 (9)', p[0])
     elif len(p) == 10:
         p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': (p[7],), 'attr_loop': p[8][1]}) + p[9]
+        print('action1 (10)', p[0])
+    else:
+        print('action1 passou')
 
 
 def p_action2(p):
@@ -155,10 +191,12 @@ def p_action2(p):
         if not isinstance(p[6], tuple):
             p[6] = (p[6],)
         p[0] = nonull({'action': p[1], 'object': (p[3],), 'attr': (p[6],)})
+        print('action2 (9)', p[0])
     elif len(p) == 11:
         if not isinstance(p[8], tuple):
             p[6] = (p[8],)
         p[0] = nonull({'action': p[1], 'object': (p[3],), 'attr': (p[8],)}) + p[10]
+        print('action2 (11)', p[0])
 
 
 def p_extended_actions(p):
@@ -198,6 +236,10 @@ def p_action1_labels(p):
                     | loops
                     | parallels"""
     p[0] = p[1]
+    if p[1] == 'sets':
+        print(f'* "sets" genealogy: {p}')
+    elif p[1] == 'applies':
+        print(f'* "applies" genealogy: {p}')
 
 
 def p_action_names(p):
@@ -233,8 +275,16 @@ def p_superobject(p):
             p[0] = p[1]
         else:
             p[0] = (p[1],)
+        print('superobject (2)', p[0])
     elif len(p) == 3:
         p[0] = (p[1], p[2])
+        #print(f'p[-2] {p[-2]}')
+        #print(f'heritage p[-2] {check_action}')
+        #print(f'p[0] {p[0]}')
+        #result_ = adjust_object_for_action(check_action, p[0])
+        #if not result_:
+        #    p[0] = "Illegal syntax"
+        print('superobject (3)', p[0])
     elif len(p) == 4:
         if p[2] == '&':
             p[2] = (p[2],)
@@ -243,8 +293,16 @@ def p_superobject(p):
         if not isinstance(p[1], tuple):
             p[1] = (p[1],)
         p[0] = p[1] + p[2] + p[3]
+        print('superobject (4)', p[0])
     elif len(p) == 5:
         p[0] = (nonull(p[1], p[2]), p[3]) + (p[4],)
+        #print(f'p[-2] {p[-2]}')
+        #print(f'heritage p[-2] {check_action}')
+        #print(f'p[0] {p[0]}')
+        #result_ = adjust_object_for_action(check_action, p[0])
+        #if not result_:
+        #    p[0] = "Illegal syntax"
+        print('superobject (5)', p[0])
 
 
 def p_object(p):
@@ -271,7 +329,13 @@ def p_object(p):
             if not isinstance(p[1], tuple):
                 p[1] = (p[1],)
             p[0] = p[1]
+        print('object (2)', p[0])
     elif len(p) == 3:
+        # p[0] = nonull(p[1], p[2])
+        # if p[1] != 'with':
+        #     p[0] = nonull(p[1]) + nonull(p[2])
+        # else:
+        #     p[0] = p[1] + p[2]
         if not isinstance(p[1], tuple):
             p[1] = (p[1],)
         if not isinstance(p[2], tuple):
@@ -291,28 +355,49 @@ def p_object(p):
                                 else:
                                     p[0] = (p[1],) + p[2]
                             else:
+                                print('p[2] not str')
                                 p[0] = (p[1],) + p[2]
                         else:
+                            print('p[1] not ref in keys')
                             p[0] = (p[1],) + p[2]
                     else:
+                        print('p[1] not dict')
                         p[0] = (p[1],) + p[2]
                 else:
+                    print('p[1] not len > 1', p[1], p[2])
                     if isinstance(p[2][0], str):
                         if p[2][0][0] == '"':
                             if isinstance(p[1][0], dict):
                                 p[1][0].update({'after_loop': p[2]})
                                 p[2] = ()
+                            else:
+                                pass
+                        else:
+                            pass
+                    else:
+                        # p[1] = p[1] + p[2]
+                        pass
                     if isinstance(p[1][0], str):
                         if p[1][0][0] == '"':
                             if isinstance(p[2][0], dict):
                                 p[2][0].update({'ref': p[1]})
                                 p[1] = ()
+                            else:
+                                pass
+                        else:
+                            # p[1] = p[1] + p[2]
+                            pass
+                    else:
+                        # p[1] = p[1] + p[2]
+                        pass
                     p[0] = p[1] + p[2]
         else:
             if len(p[1]) > 1:
                 p[0] = ((p[1],), p[2])
             else:
+                print('- object 3 len(p[1])!=1')
                 p[0] = p[1] + p[2]
+        print('object (3)', p[0])
 
 
 def p_comp(p):
@@ -323,16 +408,45 @@ def p_comp(p):
     global check_action
     if p[-2] in actions:
         check_action = p[-2]
+    elif check_action is not None:
+        pass
     else:
         check_action = None
 
     if len(p) == 3:
         p[0] = (p[1], p[2])
+        #print(f'compl p[-2] {p[-2]}')
+        #print(f'compl heritage p[-2] {check_action}')
+        #print(f'compl p[0] {p[0]}')
+        #result_ = adjust_object_for_action(check_action, p[0])
+        #if not result_:
+        #    p[0] = "Illegal syntax"
+        print('compl (3)', p[0])
     elif len(p) == 5:
         if p[1] == 'if':
+            print('if!')
             p[0] = nonull(p[1], p[2], p[3], p[4],)
+            #print(f'compl p[-2] {p[-2]}')
+            #print(f'compl heritage p[-2] {check_action}')
+            #print(f'compl p[0] {p[0]}')
+            #result_ = adjust_object_for_action(check_action, p[0])
+            #if not result_:
+            #    p[0] = "Illegal syntax"
+            print('compl (5)', p[0])
         elif p[1] == 'with':
+            print('with!')
             p[0] = nonull(p[1], p[2], p[3],) + p[4]
+            #print(f'compl p[-2] {p[-2]}')
+            #print(f'compl heritage p[-2] {check_action}')
+            #print(f'compl p[0] {p[0]}')
+            #result_ = adjust_object_for_action(check_action, p[0])
+            #if not result_:
+            #    p[0] = "Illegal syntax"
+            print('compl (5)', p[0])
+        else:
+            print('compl interno passou')
+    else:
+        print('compl passou')
 
 
 def p_statements(p):
@@ -341,11 +455,14 @@ def p_statements(p):
                 | lparen statements rparen loop2
                 | lparen statements rparen loop2 logelem statements
                 """
+    print('statements new day', p)
     if len(p) == 4:
         if p[2][0] != '(':
+            print('nested statement')
             p[0] = (p[2],)
         else:
             p[0] = p[2]
+        print('statements (4)', p[0])
     elif len(p) == 5:
         if isinstance(p[4], tuple):
             if p[4][0] == 'loop':
@@ -354,9 +471,12 @@ def p_statements(p):
                 p[0] = (p[2],)
         else:
             if p[2][0] != '(':
+                print('nested statement')
                 p[0] = (p[2],)
             else:
+                print('no nested statement')
                 p[0] = (p[2],)
+        print('statements (5)', p[0])
     elif len(p) == 6:
         if isinstance(p[5], tuple):
             if p[5][0] == 'loop':
@@ -365,10 +485,15 @@ def p_statements(p):
                 p[0] = (p[2],) + (p[4],) + p[5]
         else:
             p[0] = (p[2],) + (p[4],) + p[5]
+        print('statements (6)', p[0])
     elif len(p) == 7:
+        print('fin stt(7)')
         if not isinstance(p[5], tuple):
             p[5] = (p[5],)
+
         if p[4] is not None:
+            print(f'p[2] is {p[2]}')
+            print(f'p[5]= {p[5]}, p[6]= {p[6]}')
             if len(p[2]) == 3 and not isinstance(p[2], dict):
                 if isinstance(p[2][0], dict) and isinstance(p[2][2], dict):
                     p[0] = (p[2] + ({'obj_loop': p[4][1]},),) + p[5] + p[6]
@@ -392,9 +517,13 @@ def p_statements(p):
                 else:
                     p[0] = (p[2] + ({'obj_loop': p[4][1]},),) + p[5] + p[6]
             else:
+                print(p[2][0])
+                print((p[2], {'obj_loop': p[4][1]},) + p[5] + p[6])
                 p[0] = (p[2] + ({'obj_loop': p[4][1]},),) + p[5] + p[6]
         else:
+            print('else stt(7)')
             p[0] = (p[2],) + p[5] + p[6]
+        print('statements (7)', p[0])
     elif len(p) == 8:
         if p[5][0] == 'loop':
             p[0] = (p[2] + ({'oper': p[3], 'obj_loop': p[5][1]},),) + (p[6],) + p[7]
@@ -407,6 +536,7 @@ def p_statements(p):
                 p[0] = (p[2], p[3],) + p[4]
             else:
                 p[0] = p[2] + (p[3],) + p[4] + ({'oper': p[5], 'obj_loop': p[7][1]},)
+        print('statements (8)', p[0])
     elif len(p) == 10:
         if isinstance(p[2], dict) and not isinstance(p[4], dict):
             p[2][0].update({'oper': p[5], 'obj_loop': p[7][1]})
@@ -416,13 +546,18 @@ def p_statements(p):
             p[0] = (p[2], p[3],) + p[4] + (p[8],) + p[9]
         else:
             p[0] = p[2] + (p[3],) + p[4] + ({'oper': p[5], 'obj_loop': p[7][1]},) + (p[8],) + p[9]
+        print('statements (10)', p[0])
+    else:
+        print('statements passou')
 
 
 def p_expression2(p):
     """expression2 : superid3 symbols1 superid4 logtmp
                     | superid4 logtmp"""
+    print('expression2')
     if len(p) == 2:
         p[0] = p[1]
+        print('expression2 (2)', p[0])
     elif len(p) == 3:
         if p[2] is not None:
             p[1][0].update({'oper': p[2]})
@@ -431,16 +566,19 @@ def p_expression2(p):
             if isinstance(p[1][0], dict):
                 p[1] = p[1][0]
             p[0] = p[1]
+        print('expression2 (3)', p[0])
     elif len(p) == 4:
         if isinstance(p[1], tuple):
             p[0] = p[1] + (p[2],) + p[3]
         else:
             p[0] = (p[1], p[2], p[3],)
+        print('expression2 (4)', p[0])
     elif len(p) == 5:
         if p[4] is not None:
             p[0] = (p[1], p[2], p[3], {'oper': p[4]},)
         else:
             p[0] = p[1] + (p[2],) + p[3]
+        print('expression2 (5)', p[0])
 
 
 def p_symbols1(p):
@@ -451,6 +589,7 @@ def p_symbols1(p):
                 | lt
                 | lte"""
     p[0] = p[1]
+    print('symbols', p[0])
 
 
 def p_logtmp(p):
@@ -485,6 +624,7 @@ def p_loop1(p):
     """loop1 : underscore real dots lastloopterm
              | underscore id dots lastloopterm"""
     p[0] = ('loop', nonull(p[1], p[2], p[3], p[4]))
+    print('loop here', p[0])
 
 
 def p_loop2(p):
@@ -493,6 +633,7 @@ def p_loop2(p):
              |"""
     if len(p) == 5:
         p[0] = ('loop', nonull(p[1], p[2], p[3], p[4]))
+    print('loop here', p[0])
 
 
 def p_loopterm1(p):
@@ -515,6 +656,7 @@ def p_superid(p):
                 | dollar superid"""
     if len(p) == 2:
         p[0] = (p[1],)
+        print('superid (2)', p[0])
     elif len(p) == 3:
         if p[1] == '$':
             p[0] = ({'var_loop': p[2]},)
@@ -527,12 +669,14 @@ def p_superid(p):
             if not isinstance(p[1], tuple):
                 p[1] = (p[1],)
             p[0] = ({'ref': p[1], 'var_loop': p[3]},)
+        print('superid (4)', p[0])
 
 
 def p_superid4(p):
     """superid4 : superid3
                 | nulls"""
     p[0] = p[1]
+    print(f'superid4', p[0])
 
 
 def p_superid3(p):
@@ -546,6 +690,7 @@ def p_superid3(p):
                 | dollar superid3"""
     if len(p) == 2:
         p[0] = (p[1],)
+        print('superid3 (2)', p[0])
     elif len(p) == 3:
         if p[1] == '$':
             p[0] = ({'var_loop': p[2]},)
@@ -556,16 +701,19 @@ def p_superid3(p):
             p[0] = (p[1], p[2]) + p[3]
         else:
             p[0] = ({'ref': p[1], 'var_loop': p[3]},)
+        print('superid3 (4)', p[0])
 
 
 def p_bool1(p):
     """bool1 : bool"""
     p[0] = p[1]
+    print(f'bool', p[0])
 
 
 def p_nums_real(p):
     """num : real"""
     p[0] = p[1]
+    print(f'number', p[0])
 
 
 def p_null1(p):
@@ -573,6 +721,7 @@ def p_null1(p):
             | none
             | void"""
     p[0] = p[1]
+    print(f'void', p[0])
 
 
 ##################
@@ -607,6 +756,7 @@ def test(x=1):
 # MAIN
 ##############
 if __name__ == '__main__':
+    # IPython.embed()
     while True:
         try:
             s = input('> ')

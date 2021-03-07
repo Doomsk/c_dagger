@@ -1,0 +1,4 @@
+
+factorial: sets [10] as v1
+           multiplies [$n]_1...v1 as v2
+           returns [v2]
