@@ -40,10 +40,10 @@ Hopefully there will be much better ways to approach this project soon.
 Currently there are some open approaches we are working on:
 
 - Prototyping [![prototyping](https://img.shields.io/badge/status-wip-orange.svg?style=flat-square)](https://github.com/Doomsk/c_dagger): first attempt to write the bare minimum information for the language, i.e.: a lexer, parser, syntax tree, interpreter. All in Python and all in English for prototyping purposes.
-	- Lexer: writing the first lexer to get an idea how the language should look like.
-	- Parser: writing the first parser to understand how the syntax should look like.
-	- Interpreter: writing the first interpreter to understand how the code should interact.
-	- Compiler language choice: choose the programming language in which C† should be seriously developed at first (C, C++, Rust?).
+	- Lexer [![lexer](https://img.shields.io/badge/status-ok!-brightgreen.svg?style=flat-square)]: writing the first lexer to get an idea how the language should look like.
+	- Parser [![lexer](https://img.shields.io/badge/status-ok!-brightgreen.svg?style=flat-square)]: writing the first parser to understand how the syntax should look like.
+	- Interpreter [![prototyping](https://img.shields.io/badge/status-wip-orange.svg?style=flat-square)]: writing the first interpreter to understand how the code should interact.
+	- Compiler language choice [![fcomp](https://img.shields.io/badge/status-not%20started-yellow.svg?style=flat-square)]: choose the programming language in which C† should be seriously developed at first (C, C++, Rust?).
 - First Compiler [![fcomp](https://img.shields.io/badge/status-not%20started-yellow.svg?style=flat-square)](https://github.com/Doomsk/c_dagger): write the memory handling, choose the first bult-in actions to develop.
 	- Lexer
 	- Parser
