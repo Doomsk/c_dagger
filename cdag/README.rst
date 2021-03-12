@@ -16,17 +16,17 @@ c_dagger
 
 
 
-C†intermediate quantum programming language repository.
+C† intermediate quantum programming language repository.
 
 
 * Free software: MIT license
-* Documentation: https://cdag.readthedocs.io.
+* Documentation: https://cdagger.com/Documentation .
 
 
 Features
 --------
 
-* TODO
+ * [README](https://github.com/Doomsk/c_dagger/)
 
 Credits
 -------
