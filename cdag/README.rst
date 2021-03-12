@@ -26,7 +26,7 @@ C† intermediate quantum programming language repository.
 Features
 --------
 
- * [README](https://github.com/Doomsk/c_dagger/)
+* README at https://github.com/Doomsk/c_dagger/
 
 Credits
 -------
