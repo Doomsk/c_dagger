@@ -1,6 +1,6 @@
 # currently used
-import cdag.cdag.gpp.yacc as yacc
-from cdag.cdag.gpp.gpp_lex import tokens, actions
+import gpp.yacc as yacc
+from gpp.gpp_lex import tokens, actions
 
 
 check_action = None
@@ -200,12 +200,21 @@ def p_action2(p):
 
 
 def p_extended_actions(p):
-    """extendaction : actlabels1
-                    | actlabels1 and extendaction"""
+    """extendaction : actlabelsX
+                    | actlabelsX and extendaction"""
     if len(p) == 2:
         p[0] = (p[1],)
     elif len(p) == 4:
         p[0] = (p[1], p[2],) + p[3]
+
+
+def p_actionX(p):
+    """actlabelsX : at actlabels1
+                  | actlabels1"""
+    if len(p) == 2:
+        p[0] = p[1]
+    elif len(p) == 3:
+        p[0] = p[1] + p[2]
 
 
 def p_action1_labels(p):

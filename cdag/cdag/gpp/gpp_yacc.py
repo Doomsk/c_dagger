@@ -1,5 +1,5 @@
-import cdag.cdag.gpp.yacc as yacc
-from cdag.cdag.gpp.gpp_lex import tokens, actions
+import gpp.yacc as yacc
+from gpp.gpp_lex import tokens, actions
 
 
 check_action = None
@@ -49,13 +49,25 @@ def p_subject(p):
 def p_action0(p):
     """action : actionlabels lbracket superobject rbracket
                 | actionlabels lbracket superobject rbracket action
+                | actionlabels lbracket superobject rbracket loop1
+                | actionlabels lbracket superobject rbracket loop1 action
                 """
     if len(p[3]) == 1:
         p[3] = tuple(p[3])
     if len(p) == 5:
-        p[0] = nonull({'action': p[1], 'object': p[3]})
+        p[0] = nonull({'action': (p[1],), 'object': p[3]})
     elif len(p) == 6:
-        p[0] = nonull({'action': p[1], 'object': p[3]}) + p[5]
+        if isinstance(p[5], tuple):
+            if len(p[5]) > 1:
+                if len(p[5][1]) == 4 and isinstance(p[5][1], tuple):
+                    if p[5][1][0] == '_':
+                        p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5][1]})
+        else:
+            p[0] = nonull({'action': (p[1],), 'object': p[3]}) + p[5]
+    elif len(p) == 7:
+        if not isinstance(p[6], tuple):
+            p[6] = (p[6],)
+        p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5][1]}) + p[6]
 
 
 def p_action1(p):
@@ -79,11 +91,11 @@ def p_action1(p):
                     if p[5][1][0] == '_':
                         p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5][1]})
                 else:
-                    p[0] = ({'action': p[1], 'object': p[3]},) + p[5]
+                    p[0] = ({'action': (p[1],), 'object': p[3]},) + p[5]
             else:
-                p[0] = ({'action': p[1], 'object': p[3]},) + p[5]
+                p[0] = ({'action': (p[1],), 'object': p[3]},) + p[5]
         else:
-            p[0] = nonull({'action': p[1], 'object': p[3]}) + p[5]
+            p[0] = nonull({'action': (p[1],), 'object': p[3]}) + p[5]
     elif len(p) == 7:
         if p[5] == 'as':
             if not isinstance(p[6], tuple):
@@ -154,20 +166,29 @@ def p_action2(p):
     if len(p) == 7:
         if not isinstance(p[6], tuple):
             p[6] = (p[6],)
-        p[0] = nonull({'action': p[1], 'object': (p[3],), 'attr': (p[6],)})
+        p[0] = nonull({'action': (p[1],), 'object': (p[3],), 'attr': (p[6],)})
     elif len(p) == 11:
         if not isinstance(p[8], tuple):
             p[6] = (p[8],)
-        p[0] = nonull({'action': p[1], 'object': (p[3],), 'attr': (p[8],)}) + p[10]
+        p[0] = nonull({'action': (p[1],), 'object': (p[3],), 'attr': (p[8],)}) + p[10]
 
 
 def p_extended_actions(p):
-    """extendaction : actlabels1
-                    | actlabels1 and extendaction"""
+    """extendaction : actlabelsX
+                    | actlabelsX and extendaction"""
     if len(p) == 2:
         p[0] = (p[1],)
     elif len(p) == 4:
         p[0] = (p[1], p[2],) + p[3]
+
+
+def p_actionX(p):
+    """actlabelsX : at actlabels1
+                  | actlabels1"""
+    if len(p) == 2:
+        p[0] = p[1]
+    elif len(p) == 3:
+        p[0] = nonull(p[1] + p[2])
 
 
 def p_action1_labels(p):
@@ -269,7 +290,7 @@ def p_object(p):
             p[0] = p[1]
         else:
             if not isinstance(p[1], tuple):
-                p[1] = (p[1],)
+                p[1] = p[1]
             p[0] = p[1]
     elif len(p) == 3:
         if not isinstance(p[1], tuple):
@@ -575,6 +596,10 @@ def p_null1(p):
     p[0] = p[1]
 
 
+def p_error(p):
+    print('* Error: parser error\n')
+
+
 ##################
 # YACC PARSER
 ##################
@@ -584,8 +609,8 @@ parser = yacc.yacc()
 def parse(data, debug=0):
     parser.error = 0
     p = parser.parse(data, debug=debug)
-    if parser.error:
-        return None
+    if p is None:
+        return -11
     return p
 
 

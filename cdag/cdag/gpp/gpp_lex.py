@@ -42,7 +42,8 @@ actions = ('names',
            'returns', #
            'translates',)
 
-complements = ('with', 'where', 'as', 'if', 'else')
+# @ for quantum actions
+complements = ('with', 'where', 'as', 'if', 'else', 'at')
 
 reserved = actions + complements  # + complements2
 
@@ -76,14 +77,18 @@ brackets = ('lbracket', 'rbracket')
 
 void = ('null', 'none', 'void')
 
+# quantum to be used with @
+# special = ('quantum',)
+
 tokens = reserved + element + variables + addition\
          + loop + ids + comp_symbols + parens +\
          numeric + boolean + num_repr + brackets +\
          void
 
-t_ignore = ' \t\n;'
-t_ignore_comment = r'\#\#.*'
+t_ignore = ' \t\n;,'
+t_ignore_comment = r'\#\#.*\#\#'
 
+# : for subjects
 literals = [':']
 
 t_period = r'\.'
@@ -92,6 +97,7 @@ t_and = r'\&'
 t_or = r'\|'
 t_dots = r'\.\.\.'
 t_underscore = r'\_'
+t_at = r'\@'
 t_string = r'(?V1)(\".*?\"|«.*?»|„.*?“)'
 
 t_notequal = r'(!=|~=|<>|=!=)'
@@ -123,7 +129,7 @@ def t_colon(t):
     return t
 
 
-id_regex = r'(?V1)(?![\"\[\]\s\&\d\:!<>=~\|_\.\-\+«»„“「」『』（）])[[\w*]--[\s\:\&\|!<>=~\.\+«»„“「」『』\[\]\(\)_]]+'
+id_regex = r'(?V1)(?![\"\[\]\s\&\d\:@!<>=~\|_\.\-\+«»„“「」『』（）])[[\w*]--[@\s\:\&\|!<>=~\.\+«»„“「」『』\[\]\(\)_]]+'
 
 
 @TOKEN(id_regex)
