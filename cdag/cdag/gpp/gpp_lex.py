@@ -31,6 +31,7 @@ actions = ('names',
            'brings',
            'calls',
            'waits', #
+           'moves',
            'repeats',
            'executes', #
            'checks', #
@@ -63,13 +64,15 @@ comp_symbols = ('equal', 'notequal',
 # _ ...
 loop = ('underscore', 'dots')
 
-ids = ('id', 'string')
+ids = ('id',)
 
-numeric = ('real',)
+str = ('str',)
+
+numeric = ('realnum',)
 
 boolean = ('bool',)
 
-num_repr = ('binary', 'hexadecimal')
+num_repr = ('bin', 'hex')
 
 parens = ('lparen', 'rparen')
 
@@ -77,13 +80,15 @@ brackets = ('lbracket', 'rbracket')
 
 void = ('null', 'none', 'void')
 
+attr_types = ('string', 'real', 'boolean', 'binary', 'hexadecimal') + void
+
 # quantum to be used with @
 # special = ('quantum',)
 
 tokens = reserved + element + variables + addition\
-         + loop + ids + comp_symbols + parens +\
+         + loop + ids + str + comp_symbols + parens +\
          numeric + boolean + num_repr + brackets +\
-         void
+         attr_types
 
 t_ignore = ' \t\n;,'
 t_ignore_comment = r'\#\#.*\#\#'
@@ -98,7 +103,7 @@ t_or = r'\|'
 t_dots = r'\.\.\.'
 t_underscore = r'\_'
 t_at = r'\@'
-t_string = r'(?V1)(\".*?\"|«.*?»|„.*?“)'
+t_str = r'(?V1)(\".*?\"|«.*?»|„.*?“)'
 
 t_notequal = r'(!=|~=|<>|=!=)'
 t_equal = r'(=|==)'
@@ -150,12 +155,12 @@ def t_bool(t):
 
 
 @TOKEN(bool2)
-def t_binary(t):
+def t_bin(t):
     r'^0b[0-1]+'
     return t
 
 
-def t_hexadecimal(t):
+def t_hex(t):
     r'^0x[a-fA-F0-9]+'
     return t
 
@@ -164,8 +169,7 @@ new_real = r'(?V1)((?!(0[xb]))[+-]?(\d+([.]{1}\d+)?([eE][+-]+(\d+([.]{1}\d*)?))?
 
 
 @TOKEN(new_real)
-def t_real(t):
-
+def t_realnum(t):
     try:
         t.value = int(t.value)
     except:

@@ -63,10 +63,10 @@ def p_action0(p):
         p[3] = tuple(p[3])
 
     if len(p) == 5:
-        p[0] = nonull({'action': p[1], 'object': p[3]})
+        p[0] = nonull({'action': (p[1],), 'object': p[3]})
         print('action0 (5)', p[0])
     elif len(p) == 6:
-        p[0] = nonull({'action': p[1], 'object': p[3]}) + p[5]
+        p[0] = nonull({'action': (p[1],), 'object': p[3]}) + p[5]
         print('action0 (6)', p[0])
     else:
         print('action0 passou')
@@ -185,8 +185,8 @@ def p_action1(p):
 
 
 def p_action2(p):
-    """action : defines lbracket string rbracket as attr
-                | defines lbracket string rbracket as attr action"""
+    """action : defines lbracket str rbracket as attr
+                | defines lbracket str rbracket as attr action"""
     if len(p) == 7:
         if not isinstance(p[6], tuple):
             p[6] = (p[6],)
@@ -322,14 +322,16 @@ def p_object(p):
                 | num object
                 | bool1
                 | bool1 object
-                | string
-                | string object
+                | str
+                | str object
                 | superid loop1
                 | bool1 loop1
-                | binary
-                | binary object
-                | hexadecimal
-                | hexadecimal object"""
+                | bin
+                | bin object
+                | hex
+                | hex object
+                | attrtypes
+                | attrtypes object"""
     if len(p) == 2:
         if isinstance(p[1], tuple) and len(p[1]) > 1:
             # p[0] = (p[1],)
@@ -407,6 +409,16 @@ def p_object(p):
                 print('- object 3 len(p[1])!=1')
                 p[0] = p[1] + p[2]
         print('object (3)', p[0])
+
+
+def p_attrtypes(p):
+    """attrtypes : string
+                 | real
+                 | boolean
+                 | hexadecimal
+                 | binary
+                 | void"""
+    p[0] = p[1]
 
 
 def p_comp(p):
@@ -630,14 +642,14 @@ def p_attr(p):
 
 
 def p_loop1(p):
-    """loop1 : underscore real dots lastloopterm
+    """loop1 : underscore realnum dots lastloopterm
              | underscore id dots lastloopterm"""
     p[0] = ('loop', nonull(p[1], p[2], p[3], p[4]))
     print('loop here', p[0])
 
 
 def p_loop2(p):
-    """loop2 : underscore real dots lastloopterm
+    """loop2 : underscore realnum dots lastloopterm
              | underscore id dots lastloopterm
              |"""
     if len(p) == 5:
@@ -646,9 +658,9 @@ def p_loop2(p):
 
 
 def p_loopterm1(p):
-    """lastloopterm : real
+    """lastloopterm : realnum
                     | id
-                    | real mod lastloopterm
+                    | realnum mod lastloopterm
                     | id mod lastloopterm"""
     if len(p) == 2:
         p[0] = p[1]
@@ -658,7 +670,7 @@ def p_loopterm1(p):
 
 def p_superid(p):
     """superid : id
-                | string
+                | str
                 | num
                 | id period superid
                 | id dollar superid
@@ -691,9 +703,9 @@ def p_superid4(p):
 def p_superid3(p):
     """superid3 : id
                 | num
-                | binary
-                | hexadecimal
-                | string
+                | bin
+                | hex
+                | str
                 | id period superid3
                 | id dollar superid3
                 | dollar superid3"""
@@ -719,8 +731,8 @@ def p_bool1(p):
     print(f'bool', p[0])
 
 
-def p_nums_real(p):
-    """num : real"""
+def p_nums_realnum(p):
+    """num : realnum"""
     p[0] = p[1]
     print(f'number', p[0])
 

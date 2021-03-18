@@ -1,4 +1,5 @@
 import gpp.gpp_lex as lex
+import regex
 
 
 class ActionsInterp:
@@ -7,6 +8,8 @@ class ActionsInterp:
                              'maps': self.action_maps2,
                              'applies': self.action_applies2,
                              'uses': self.action_uses2,
+                             'returns': self.action_returns2,
+                             'inputs': self.action_inputs2,
                              'adds': self.action_adds2,
                              'multiplies': self.action_multiplies2,
                              'outputs': self.action_outputs2
@@ -15,6 +18,12 @@ class ActionsInterp:
         self.pointer1 = {}
         self.mem1 = {}
         self.code_info = {}
+
+    ###########################
+    ###########################
+    # FUNCTION COMPLEMENTS
+    ###########################
+    ###########################
 
     # define hex, bin and null as reserved attribute-like strings
     @staticmethod
@@ -94,6 +103,38 @@ class ActionsInterp:
                 res.append(self.check_type(self.recur_value(ref_o)))
         return res
 
+    @staticmethod
+    def isfloat(x):
+        return all([[any([i.isnumeric(), i in ['.','e']]) for i in x], len(x.split('.')) == 2])
+
+    def input_handler(self, x):
+        new_x = x
+        rfa = regex.findall(lex.t_str, x)
+        for i in rfa:
+            new_x = new_x.replace(i, '')
+        new_x = new_x.split(' ')
+        new_x = [i for i in new_x if len(i) > 0]
+        new_x.extend(rfa)
+        res = []
+        for i in new_x:
+            if i[0] == '"':
+                res.append(('string', i))
+            elif i[0:2] == '0b':
+                res.append(('binary', i))
+            elif i[0:2] == '0x':
+                res.append(('hexadecimal', i))
+            elif i.lower() in ['true', 'false']:
+                res.append(('boolean', i.lower()))
+            else:
+                if self.isfloat(i):
+                    res.append(('real', float(i)))
+                else:
+                    if i.isnumeric():
+                        res.append(('real', int(i)))
+                    else:
+                        res.append(('string', i))
+        return res
+
     ###########################
     ###########################
     # ACTIONS FUNCTIONS
@@ -151,6 +192,9 @@ class ActionsInterp:
                     self.mem1.update({self.count_mem1: {'value': {}}})
                     p_ref_list += (ref_a,)
                 self.pointer1.update({ref_r: {'pointer': p_ref_list}})
+
+    def action_returns2(self, code_id, prev_subj, subj, next_subj, obj, attr, pos_attr):
+        self.action_uses2(code_id, prev_subj, subj, next_subj, obj, attr, pos_attr)
 
     def action_uses2(self, code_id, prev_subj, subj, next_subj, obj, attr, pos_attr):
         ref_a = '_'.join([code_id, 'attr', subj, 'return'])
@@ -277,7 +321,27 @@ class ActionsInterp:
             if self.check_obj(o):
                 ref_o = '_'.join([code_id, 'attr', subj, o])
                 res.append(str(self.recur_value(ref_o)))
+            else:
+                res.append(o)
         print(' '.join(res))
+
+    def action_inputs2(self, code_id, prev_subj, subj, next_subj, obj, attr, pos_attr):
+        answer = input()
+        w_list = self.input_handler(answer)
+        if len(w_list) == len(obj) and len(obj) == len(attr):
+            for o, w, a in zip(obj, w_list, attr):
+                if w[0] == o:
+                    ref_a = '_'.join([code_id, 'attr', subj, a])
+                    self.count_mem1 += 1
+                    self.pointer1.update({ref_a: {'mem': self.count_mem1}})
+                    self.mem1.update({self.count_mem1: {'value': w[1]}})
+        else:
+            if len(attr) == 1 and len(obj) == 1:
+                ref_a = '_'.join([code_id, 'attr', subj, attr])
+                self.count_mem1 += 1
+                self.pointer1.update({ref_a: {'mem': self.count_mem1}})
+                self.mem1.update({self.count_mem1: {'value': answer}})
+
 
     ###########################
     ###########################
@@ -409,31 +473,32 @@ class ActionsInterp:
                             obj = self.define_obj_loop(code_id, subj, obj, i['obj_loop'])
                         if 'attr_loop' in i.keys():
                             attr = self.define_obj_loop(code_id, subj, attr, i['attr_loop'])
-                    if obj[0] in ['with', 'if']:
-                        if act in self.actions_dict.keys():
-                            next_subj = obj[1][0]['subject'][0]
-                            self.actions_dict[act](code_id, prev_subj, subj, next_subj, obj, attr, pos_attr)
-                        aux = True
-                        obj_subj = [o1 + 1 for o1, o in enumerate(obj) if o in ['with', 'if']]
-                        for idx, sa in enumerate(zip(obj_subj, attr)):
-                            next_subj = obj[sa[0]][0]['subject'][0]
-                            r = self.execute_parse(code_id, obj[sa[0]], full_x, prev_subj, subj, next_subj,
-                                                   act,
-                                                   sa[1], obj, idx, deep + 1, aux)
-                        aux = False
-                        idx = None
-                    else:
-                        if act in self.actions_dict.keys():
-                            self.actions_dict[act](code_id, prev_subj, subj, next_subj, obj, attr, pos_attr)
-                    if next_subj is not None and aux:
-                        sb = '_'.join([code_id, 'subj', next_subj])
-                        if self.code_info[sb]['type'] != 'main':
+                    if len(obj) > 0:
+                        if obj[0] in ['with', 'if']:
+                            if act in self.actions_dict.keys():
+                                next_subj = obj[1][0]['subject'][0]
+                                self.actions_dict[act](code_id, prev_subj, subj, next_subj, obj, attr, pos_attr)
+                            aux = True
+                            obj_subj = [o1 + 1 for o1, o in enumerate(obj) if o in ['with', 'if']]
+                            for idx, sa in enumerate(zip(obj_subj, attr)):
+                                next_subj = obj[sa[0]][0]['subject'][0]
+                                r = self.execute_parse(code_id, obj[sa[0]], full_x, prev_subj, subj, next_subj,
+                                                       act,
+                                                       sa[1], obj, idx, deep + 1, aux)
                             aux = False
-                            r = self.execute_parse(code_id, full_x[self.code_info[sb]['pos'] + 1], full_x,
-                                                   prev_subj,
-                                                   subj,
-                                                   None, None, None, None, pos_attr, deep + 1,
-                                                   aux=True)
+                            idx = None
+                        else:
+                            if act in self.actions_dict.keys():
+                                self.actions_dict[act](code_id, prev_subj, subj, next_subj, obj, attr, pos_attr)
+                        if next_subj is not None and aux:
+                            sb = '_'.join([code_id, 'subj', next_subj])
+                            if self.code_info[sb]['type'] != 'main':
+                                aux = False
+                                r = self.execute_parse(code_id, full_x[self.code_info[sb]['pos'] + 1], full_x,
+                                                       prev_subj,
+                                                       subj,
+                                                       None, None, None, None, pos_attr, deep + 1,
+                                                       aux=True)
             if i == 'where':
                 break
         return 0
