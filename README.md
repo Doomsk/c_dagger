@@ -1,4 +1,7 @@
 # C†
+
+[![Join the chat at https://gitter.im/c_dagger/help](https://badges.gitter.im/c_dagger/help.svg)](https://gitter.im/c_dagger/help?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Intermediate quantum programming language repository.
 We are under development.
 Please refer to [C†'s page](https://cdagger.com) for its (more extensive) documentation.
