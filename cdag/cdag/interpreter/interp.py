@@ -17,7 +17,7 @@ class Interpreter(ActionsInterp):
             t_0 = time.process_time()
             code = map_lang2code(code, _lang)
             t_1 = time.process_time()
-            print(f'{round(t_1 - t_0, 9)}s')
+            # print(f'{round(t_1 - t_0, 9)}s')
             _r = {}
             t0 = time.process_time()
             _c = g.parse(code)
