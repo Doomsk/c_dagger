@@ -80,12 +80,13 @@ def p_action1(p):
     """action : extendaction lbracket superobject rbracket
                 | extendaction lbracket superobject rbracket action
                 | extendaction lbracket superobject rbracket loop1
-                | extendaction lbracket superobject rbracket as attr
-                | extendaction lbracket superobject rbracket as attr action
-                | extendaction lbracket superobject rbracket loop1 as attr
-                | extendaction lbracket superobject rbracket loop1 as attr action
-                | extendaction lbracket superobject rbracket loop1 as attr loop1
-                | extendaction lbracket superobject rbracket loop1 as attr loop1 action"""
+                | extendaction lbracket superobject rbracket loop1 action
+                | extendaction lbracket superobject rbracket as attrX
+                | extendaction lbracket superobject rbracket as attrX action
+                | extendaction lbracket superobject rbracket loop1 as attrX
+                | extendaction lbracket superobject rbracket loop1 as attrX action
+                | extendaction lbracket superobject rbracket loop1 as attrX loop1
+                | extendaction lbracket superobject rbracket loop1 as attrX loop1 action"""
     if len(p[3]) == 1:
         p[3] = tuple(p[3])
     if len(p) == 5:
@@ -107,6 +108,9 @@ def p_action1(p):
             if not isinstance(p[6], tuple):
                 p[6] = (p[6],)
             p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6]})
+        elif isinstance(p[5], tuple):
+            if p[5][0] == 'loop':
+                p[0] = ({'action': p[1], 'object': p[3], 'obj_loop': p[5][1]},) + p[6]
     elif len(p) == 8:
         if p[5] == 'as':
             if not isinstance(p[6], tuple):
@@ -167,8 +171,8 @@ def p_action1(p):
 
 
 def p_action2(p):
-    """action : defines lbracket str rbracket as attr
-                | defines lbracket str rbracket as attr action"""
+    """action : defines lbracket str rbracket as attrX
+                | defines lbracket str rbracket as attrX action"""
     if len(p) == 7:
         if not isinstance(p[6], tuple):
             p[6] = (p[6],)
@@ -216,6 +220,7 @@ def p_action1_labels(p):
                     | reads
                     | loads
                     | moves
+                    | resets
                     | names
                     | inputs
                     | invokes
@@ -291,6 +296,8 @@ def p_object(p):
                 | bin object
                 | hex
                 | hex object
+                | qubinary
+                | qubinary object
                 | attrtypes
                 | attrtypes object"""
     if len(p) == 2:
@@ -351,6 +358,7 @@ def p_attrtypes(p):
                  | boolean
                  | hexadecimal
                  | binary
+                 | qubin
                  | void"""
     p[0] = p[1]
 
@@ -506,15 +514,45 @@ def p_logelem(p):
     p[0] = p[1]
 
 
+def p_attrx(p):
+    """attrX : at attr
+             | attr"""
+    if len(p) == 2:
+        p[0] = p[1]
+    elif len(p) == 3:
+        if isinstance(p[2], tuple):
+            if isinstance(p[2][0], dict):
+                p[2][0].update({'@': True})
+                p[0] = p[2]
+            elif isinstance(p[2][0], str):
+                new_p2 = ('@' + p[2][0],)
+                new_p2 = new_p2 + p[2][1:]
+                p[0] = new_p2
+        elif isinstance(p[2], str):
+            p[0] = '@' + p[2]
+
+
 def p_attr(p):
     """attr : id
+            | superid
             | superid loop1
-            | id attr"""
+            | id attrX"""
     if len(p) == 2:
         p[0] = p[1]
     elif len(p) == 3:
         if p[2][0] == 'loop':
-            p[0] = p[1] + ({'attr_loop': p[2][1]},)
+            if isinstance(p[1], dict):
+                p[0] = p[1].update({'attr_loop': p[2][1]})
+            elif isinstance(p[1], tuple):
+                for d0, d in enumerate(p[1]):
+                    if isinstance(d, dict):
+                        p[1][d0].update({'attr_loop': p[2][1]})
+                        p[0] = p[1]
+                        break
+                if p[0] is None:
+                    p[0] = p[1] + ({'attr_loop': p[2][1]},)
+            else:
+                p[0] = p[1] + ({'attr_loop': p[2][1]},)
         else:
             if not isinstance(p[2], tuple):
                 p[2] = (p[2],)
@@ -581,6 +619,7 @@ def p_superid3(p):
                 | bin
                 | hex
                 | str
+                | qubinary
                 | id period superid3
                 | id dollar superid3
                 | dollar superid3"""
@@ -596,6 +635,16 @@ def p_superid3(p):
             p[0] = (p[1], p[2]) + p[3]
         else:
             p[0] = ({'ref': p[1], 'var_loop': p[3]},)
+
+
+def p_qubinary(p):
+    """qubinary : qubit lparen superid3 rparen
+                | qubit lparen superid3 loop1 rparen"""
+    if len(p) == 5:
+        p[0] = {'qubit': p[3]}
+    elif len(p) == 6:
+        p[3][0].update({'qubit_loop': p[4][1]})
+        p[0] = {'qubit': p[3]}
 
 
 def p_bool1(p):

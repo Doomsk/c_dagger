@@ -81,7 +81,7 @@ from_pt2code = {'seta': 'sets',
                 'move': 'moves',
                 'aguarda': 'waits',
                 'checa': 'checks',
-                'returna': 'returns',
+                'retorna': 'returns',
                 'multiplica': 'multiplies',
                 'onde': 'where',
                 'como': 'as',
@@ -103,6 +103,6 @@ from_pt2code = {'seta': 'sets',
 from_code2pt = {v: k for k, v in from_pt2code.items()}
 
 
-available_languages = ['en', 'pt']
-from_lang2code = {'en': from_en2code, 'pt': from_pt2code}
-from_code2lang = {'en': from_code2en, 'pt': from_code2pt}
+available_languages = [None, 'en', 'pt']
+from_lang2code = {'en': from_en2code, 'pt': from_pt2code, None: from_en2code}
+from_code2lang = {'en': from_code2en, 'pt': from_code2pt, None: from_code2en}

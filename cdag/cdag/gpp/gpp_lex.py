@@ -31,7 +31,8 @@ actions = ('names',
            'brings',
            'calls',
            'waits', #
-           'moves',
+           'moves', #
+           'resets', #
            'repeats',
            'executes', #
            'checks', #
@@ -44,7 +45,7 @@ actions = ('names',
            'translates',)
 
 # @ for quantum actions
-complements = ('with', 'where', 'as', 'if', 'else', 'at')
+complements = ('with', 'where', 'as', 'if', 'else', 'at', 'qubit')
 
 reserved = actions + complements  # + complements2
 
@@ -80,7 +81,7 @@ brackets = ('lbracket', 'rbracket')
 
 void = ('null', 'none', 'void')
 
-attr_types = ('string', 'real', 'boolean', 'binary', 'hexadecimal') + void
+attr_types = ('string', 'real', 'boolean', 'binary', 'hexadecimal', 'qubin') + void
 
 # quantum to be used with @
 # special = ('quantum',)
@@ -91,7 +92,7 @@ tokens = reserved + element + variables + addition\
          attr_types
 
 t_ignore = ' \t\n;,'
-t_ignore_comment = r'\#\#.*\#\#'
+t_ignore_comment = r'(\#\#.*\#\#|\/\*.*\*\/|\/\/.*\/\/)'
 
 # : for subjects
 literals = [':']

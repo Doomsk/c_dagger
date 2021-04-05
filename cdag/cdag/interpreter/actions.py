@@ -1,6 +1,9 @@
 import gpp.gpp_lex as lex
 import regex
 
+#TODO:
+# - loop block on actions
+
 
 class ActionsInterp:
     def __init__(self):
@@ -12,7 +15,8 @@ class ActionsInterp:
                              'inputs': self.action_inputs2,
                              'adds': self.action_adds2,
                              'multiplies': self.action_multiplies2,
-                             'outputs': self.action_outputs2
+                             'outputs': self.action_outputs2,
+                             'loops': self.action_loops2
                              }
         self.count_mem1 = 0
         self.pointer1 = {}
@@ -79,6 +83,8 @@ class ActionsInterp:
                     return 'hex'
                 elif x[0:2] == '0b':
                     return 'bin'
+                elif 'qubit' in x:
+                    return 'qubin'
                 else:
                     return 'str'
         elif isinstance(x, int):
@@ -105,7 +111,7 @@ class ActionsInterp:
 
     @staticmethod
     def isfloat(x):
-        return all([[any([i.isnumeric(), i in ['.','e']]) for i in x], len(x.split('.')) == 2])
+        return all([[any([i.isnumeric(), i in ['.', 'e']]) for i in x], len(x.split('.')) == 2])
 
     def input_handler(self, x):
         new_x = x
@@ -342,6 +348,8 @@ class ActionsInterp:
                 self.pointer1.update({ref_a: {'mem': self.count_mem1}})
                 self.mem1.update({self.count_mem1: {'value': answer}})
 
+    def action_loops2(self, code_id, prev_subj, subj, next_subj, obj, attr, pos_attr):
+        pass
 
     ###########################
     ###########################
@@ -407,7 +415,8 @@ class ActionsInterp:
     ###########################
 
     # code details extract from the parser
-    def parse_details(self, code_id, x, main_subj=None, cur_subj=None, act=None, obj=None, attr=None,
+    def parse_details(self, code_id, x, main_subj=None, cur_subj=None, act=None, obj=None,
+                      attr=None,
                       inside=False):
         for i0, i in enumerate(x):
             if isinstance(i, tuple):
@@ -452,13 +461,26 @@ class ActionsInterp:
                                             'attr', None)})
 
     # executing the parse "the interpreter" function
-    def execute_parse(self, code_id, x, full_x, prev_subj=None, subj=None, next_subj=None, act=None,
+    def execute_parse(self, code_id,
+                      x,
+                      full_x,
+                      prev_subj=None,
+                      subj=None,
+                      next_subj=None,
+                      act=None,
                       attr=None,
-                      obj=None, pos_attr=None, deep=0, aux=False):
+                      obj=None,
+                      pos_attr=None,
+                      var_loop=None,
+                      loop_vals=None,
+                      inside_loop=False,
+                      deep=0,
+                      aux=False):
         for i0, i in enumerate(x):
             if isinstance(i, tuple):
-                r = self.execute_parse(code_id,i, full_x, prev_subj, subj, next_subj, act, attr, obj,
-                                       pos_attr,
+                r = self.execute_parse(code_id, i, full_x, prev_subj, subj, next_subj, act, attr,
+                                       obj,
+                                       pos_attr, var_loop, loop_vals, inside_loop,
                                        deep + 1, aux)
             elif isinstance(i, dict):
                 if 'subject' in i.keys():
@@ -473,32 +495,49 @@ class ActionsInterp:
                             obj = self.define_obj_loop(code_id, subj, obj, i['obj_loop'])
                         if 'attr_loop' in i.keys():
                             attr = self.define_obj_loop(code_id, subj, attr, i['attr_loop'])
+                    else:
+                        var_loop = obj[1]['subject'][0]['var_loop'][0]
+                        loop_vals = i['obj_loop']
+                        inside_loop = True
                     if len(obj) > 0:
                         if obj[0] in ['with', 'if']:
                             if act in self.actions_dict.keys():
-                                next_subj = obj[1][0]['subject'][0]
-                                self.actions_dict[act](code_id, prev_subj, subj, next_subj, obj, attr, pos_attr)
+                                next_subj = obj[1][0]["subject"][0]
+                                self.actions_dict[act](code_id, prev_subj, subj, next_subj, obj,
+                                                       attr, pos_attr)
                             aux = True
                             obj_subj = [o1 + 1 for o1, o in enumerate(obj) if o in ['with', 'if']]
+                            if len(obj_subj) == len(attr):
+                                # print('len obj_subj == len attr')
+                                pass
                             for idx, sa in enumerate(zip(obj_subj, attr)):
-                                next_subj = obj[sa[0]][0]['subject'][0]
-                                r = self.execute_parse(code_id, obj[sa[0]], full_x, prev_subj, subj, next_subj,
+                                next_subj = obj[sa[0]][0]["subject"][0]
+                                r = self.execute_parse(code_id, obj[sa[0]], full_x, prev_subj, subj,
+                                                       next_subj,
                                                        act,
-                                                       sa[1], obj, idx, deep + 1, aux)
+                                                       sa[1], obj, idx, var_loop, loop_vals,
+                                                       inside_loop, deep + 1, aux)
                             aux = False
                             idx = None
                         else:
                             if act in self.actions_dict.keys():
-                                self.actions_dict[act](code_id, prev_subj, subj, next_subj, obj, attr, pos_attr)
+                                self.actions_dict[act](code_id, prev_subj, subj, next_subj, obj,
+                                                       attr, pos_attr)
                         if next_subj is not None and aux:
                             sb = '_'.join([code_id, 'subj', next_subj])
                             if self.code_info[sb]['type'] != 'main':
                                 aux = False
-                                r = self.execute_parse(code_id, full_x[self.code_info[sb]['pos'] + 1], full_x,
+                                r = self.execute_parse(code_id,
+                                                       full_x[self.code_info[sb]['pos'] + 1],
+                                                       full_x,
                                                        prev_subj,
                                                        subj,
-                                                       None, None, None, None, pos_attr, deep + 1,
+                                                       None, None, None, None, pos_attr, var_loop,
+                                                       loop_vals, inside_loop, deep + 1,
                                                        aux=True)
+                    inside_loop = False
+                    var_loop = None
+                    loop_vals = None
             if i == 'where':
                 break
         return 0
