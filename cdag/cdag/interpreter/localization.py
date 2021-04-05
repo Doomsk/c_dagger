@@ -102,7 +102,60 @@ from_pt2code = {'seta': 'sets',
 
 from_code2pt = {v: k for k, v in from_pt2code.items()}
 
-
 available_languages = [None, 'en', 'pt']
 from_lang2code = {'en': from_en2code, 'pt': from_pt2code, None: from_en2code}
 from_code2lang = {'en': from_code2en, 'pt': from_code2pt, None: from_code2en}
+
+highlighting = {'actions': (['names',
+                            'loads',  #
+                            'inputs',  #
+                            'outputs',  #
+                            'reads',  #
+                            'applies',  #
+                            'starts',
+                            'divides',  #
+                            'powers',  #
+                            'maps',  #
+                            'adds',  #
+                            'multiplies',  #
+                            'keeps',  #
+                            'publishes',  #
+                            'invokes',  #
+                            'dequeues',  #
+                            'queues',  #
+                            'parallels',  #
+                            'processes',
+                            'threads',
+                            'produces',  #
+                            'consumes',  #
+                            'uses',  #
+                            'roots',
+                            'sets',  #
+                            'brings',
+                            'calls',
+                            'waits',  #
+                            'moves',  #
+                            'resets',  #
+                            'repeats',
+                            'executes',  #
+                            'checks',  #
+                            'evaluates',
+                            'computes',
+                            'defines',
+                            'compares',
+                            'loops',
+                            'returns',  #
+                            'translates'], '#9080ff') ,
+                'complements': (['with', 'where', 'as', 'if', 'else', 'at'], '#7c3737'),
+                'quantum': (['qubit'], '#92008c'),
+                'elements': (['\:', '@', '\&', '\|',], '#ff9b57'),
+                'symbols': (['\%', '\=', '\=\=', '\!\=', '<>', '~\=', '\>', '\<', '\>\=', '\=\>', '\<\=',
+                            '\=\<'], '#f09d68'),  #'#e6ccff'),
+                'loop': (['\$', '\_', '\.\.\.'], '#92008c'),
+                'attr_types': (['string', 'real', 'boolean', 'binary', 'hexadecimal', 'qubin',
+                               'null', 'none', 'void'], '#dd0000'),
+                'comment': ([r'(\#\#.*\#\#|\/\*.*\*\/|\/\/.*\/\/)'], '#c9e7e7'),
+                'misc': ([r'\[', r'\]', r'」', r'』', r'「', r'『', r'\(', r'\)', r'（', r'）'], '#D0D0D0'),
+                'extra': ([r'(true|false)', r'0b[0-1]+', r'0x[a-fA-F0-9]+', r'((?!(0[xb]))[+-]?(\d+([.]{1}\d+)?([eE][+-]+(\d+([.]{1}\d*)?))?|[.]{1}\d+([eE][+-]+(\d+([.]{1}\d+)?))))'], '#26c5c9'),
+                'string': ([r'(\".*?\"|«.*?»|„.*?“)'], '#218766')
+                }
