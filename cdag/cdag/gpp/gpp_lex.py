@@ -4,6 +4,7 @@ import re
 
 
 actions = ('names',
+           'renames',
            'loads', #
            'inputs', #
            'outputs', #
@@ -148,7 +149,7 @@ def t_id(t):
 
 
 bool2 = r'^(true|false)$'
-
+bool_vals = ('true', 'false')
 
 @TOKEN(bool2)
 def t_bool(t):

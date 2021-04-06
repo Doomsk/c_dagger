@@ -222,6 +222,7 @@ def p_action1_labels(p):
                     | moves
                     | resets
                     | names
+                    | renames
                     | inputs
                     | invokes
                     | queues

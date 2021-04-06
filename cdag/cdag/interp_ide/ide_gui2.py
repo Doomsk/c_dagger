@@ -3,7 +3,7 @@ import regex
 import subprocess
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (QApplication, QDialog, QVBoxLayout, QComboBox, QPushButton, QTabBar,
-                               QTabWidget, QFileDialog, QGridLayout, QMainWindow)
+                               QTabWidget, QFileDialog, QGridLayout, QMainWindow, QStatusBar)
 from PySide6.QtCore import (Slot, Qt, QRect, QSize, QRegularExpression,
                             QRegularExpressionMatchIterator)
 from PySide6.QtGui import (QColor, QBrush, QPainter, QTextFormat, QFont, QTextCursor,
@@ -13,8 +13,8 @@ from interpreter.localization import (available_languages, from_code2lang, from_
                                       map_lang2code, map_code2lang, highlighting)
 from interpreter.interp import Interpreter
 
-#TODO:
-# - this is a previous version
+# TODO:
+#  - this is the current version
 
 git_version = subprocess.check_output(["git", "describe", "--always"]).strip()
 
@@ -143,7 +143,14 @@ class CdagSyntax(QSyntaxHighlighter):
             qbc = QBrush()
             qbc.setColor(hv[1])
             tcf.setForeground(qbc.color())
-            k_ = '|'.join([k for k in hv[0]])
+            if hk in ['actions', 'attr_types', 'bools', 'complements']:
+                if self.lang not in ['', 'en']:
+                    new_hv = [from_code2lang[self.lang][i] for i in hv[0]]
+                else:
+                    new_hv = hv[0]
+            else:
+                new_hv = hv[0]
+            k_ = '|'.join([k for k in new_hv])
             if hk in ['actions', 'complements', 'extra', 'bools']:
                 expr = rf'(?<!\w)({k_})(?!\w)'
             else:
@@ -162,8 +169,11 @@ class MainDialog(QMainWindow):
         self.tabnum = 0
 
         self.setWindowTitle("C† Code Editor")
+        self.cursor1 = QTextCursor()
+
         self.fname_list = []
         self.cur_data = []
+        self.lang_list = []
         self.itprtr = Interpreter()
 
         # Open/New/Save buttons as vertical layout
@@ -220,6 +230,12 @@ class MainDialog(QMainWindow):
         lrl.addWidget(self.runl, 1, 1)
         self.right_layout.setLayout(lrl)
 
+        # StatusBar
+        self.sbar = QStatusBar()
+        self.setStatusBar(self.sbar)
+        self.sbarll = self.statusbarlanguagelabel()
+        self.sbar.addWidget(self.sbarll)
+
         # Button click dynamics
         self.tabwidget = QTabWidget()
         self.tabwidget.setTabsClosable(True)
@@ -227,16 +243,12 @@ class MainDialog(QMainWindow):
         self.nb.clicked.connect(self.onclicknewb)
         self.sb.clicked.connect(self.onclicksaveb)
         self.rb.clicked.connect(self.onclickrunb)
-        self.tabwidget.addTab(CodeEditor(), '* untitled.c†')
-        self.fname_list.append({'path': None, 'short': 'untitled.c†'})
-        self.cur_data.append('')
 
         # Main layout
         main = QVBoxLayout()
         main.addWidget(self.right_layout)
         main.addWidget(self.tabwidget)
         self.tabwidget.tabCloseRequested.connect(self.onclosetab)
-        self.tabwidget.currentWidget().textChanged.connect(self.onchangetext)
 
         # Setting up the window
         self.dial_ = QWidget()
@@ -281,10 +293,12 @@ class MainDialog(QMainWindow):
             idx = self.tabwidget.currentIndex()
             self.fname_list.append({'path': file_[0], 'short': short_name})
             self.cur_data.append(code_)
+            self.lang_list.append(lang_)
             cursor_.movePosition(QTextCursor.Start)
             ccode.setTextCursor(cursor_)
 
             self.tabwidget.currentWidget().textChanged.connect(self.onchangetext)
+            self.setsbar()
         except FileNotFoundError as error:
             pass
 
@@ -297,10 +311,24 @@ class MainDialog(QMainWindow):
         new_idx = self.tabwidget.currentIndex()
         self.tabnum += 1
         fname = fname + str(self.tabnum) + '.c†'
-        self.tabwidget.setTabText(new_idx, '* ' + fname)
         self.fname_list.append({'path': '', 'short': fname})
         self.cur_data.append('')
+        if len(self.lcb_w.currentText()) > 0:
+            lang_ = self.lcb_w.currentText()
+        else:
+            lang_ = 'en'
+        self.tabwidget.setTabText(new_idx, '* ' + fname + f' [{lang_}]')
+        self.lang_list.append(lang_)
+
+        a = CdagSyntax(new_tab.document(), lang_)
+        a.rehighlight()
+        new_tab.insertPlainText('')
+
+        cursor_ = QTextCursor(new_tab.textCursor())
+        cursor_.movePosition(QTextCursor.Start)
+        new_tab.setTextCursor(cursor_)
         self.tabwidget.currentWidget().textChanged.connect(self.onchangetext)
+        self.setsbar()
 
     @Slot()
     def onclicksaveb(self):
@@ -334,27 +362,37 @@ class MainDialog(QMainWindow):
         tab_name = self.tabwidget.tabText(idx)
         if text_content != self.cur_data[idx] or self.cur_data[idx] == '':
             if '*' not in tab_name[0]:
-                self.tabwidget.setTabText(idx, '* ' + tab_name)
+                self.tabwidget.setTabText(idx, '* ' + tab_name + f' [{self.lang_list[idx]}]')
         else:
             if '*' in tab_name[0]:
-                self.tabwidget.setTabText(idx, tab_name[2:])
+                self.tabwidget.setTabText(idx, tab_name[2:] + f' [{self.lang_list[idx]}]')
 
     @Slot()
     def onclosetab(self, idx):
         self.tabwidget.removeTab(idx)
         self.fname_list.pop(idx)
         self.cur_data.pop(idx)
+        self.lang_list.pop(idx)
         if self.tabwidget.count() == 0:
-            new_tab = CodeEditor()
-            fname = 'untitled'
-            self.tabwidget.addTab(new_tab, '* ' + fname)
-            self.tabwidget.setFocus()
-            new_idx = self.tabwidget.currentIndex()
-            fname = fname + str(new_idx) + '.c†'
-            self.tabwidget.setTabText(new_idx, '* ' + fname)
-            self.fname_list.append({'path': '', 'short': fname})
-            self.cur_data.append('')
-            self.tabwidget.currentWidget().textChanged.connect(self.onchangetext)
+            self.onclicknewb()
+
+    @Slot()
+    def movingcursor(self):
+        print(self.tabwidget.currentWidget().textCursor().position())
+        print(self.cursor1.positionInBlock(), self.cursor1.blockNumber())
+
+    @Slot()
+    def statusbarlanguagelabel(self):
+        return QLabel(f'lang: {"en" if self.lcb_w.currentText() == "" else self.lcb_w.currentText()}')
+
+    @Slot()
+    def setsbar(self):
+        self.sbar.removeWidget(self.sbarll)
+        self.sbarll = self.statusbarlanguagelabel()
+        self.sbar.addWidget(self.sbarll)
+
+    def statusbar(self):
+        pass
 
     @Slot()
     def savedialog(self, idx):
