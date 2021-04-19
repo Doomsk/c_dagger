@@ -3,6 +3,11 @@ from gpp.lex import TOKEN
 import re
 
 
+# TODO:
+#  - change number type to int & float
+#  - include complex numbers
+#  - check how to represent numbers
+
 actions = ('names',
            'renames',
            'loads', #
@@ -43,12 +48,14 @@ actions = ('names',
            'compares',
            'loops',
            'returns', #
-           'translates',)
+           'translates',
+           'amplifies')
 
 # @ for quantum actions
-complements = ('with', 'where', 'as', 'if', 'else', 'at', 'qubit')
+complements = ('with', 'where', 'as', 'if', 'else')
+complements2 = ('at', 'qubit')
 
-reserved = actions + complements  # + complements2
+reserved = actions + complements + complements2
 
 # .
 element = ('period',)
@@ -76,6 +83,8 @@ boolean = ('bool',)
 
 num_repr = ('bin', 'hex')
 
+numeric_expr = numeric + boolean + num_repr
+
 parens = ('lparen', 'rparen')
 
 brackets = ('lbracket', 'rbracket')
@@ -89,11 +98,10 @@ attr_types = ('string', 'real', 'boolean', 'binary', 'hexadecimal', 'qubin') + v
 
 tokens = reserved + element + variables + addition\
          + loop + ids + str + comp_symbols + parens +\
-         numeric + boolean + num_repr + brackets +\
-         attr_types
+         numeric_expr + brackets + attr_types
 
 t_ignore = ' \t\n;,'
-t_ignore_comment = r'(\#\#.*\#\#|\/\*.*\*\/|\/\/.*\/\/)'
+t_ignore_comment = r'(\#\#.*\#\#|\/\*.*\*\/|\/\/.*\/\/|--.*--)'
 
 # : for subjects
 literals = [':']
@@ -105,7 +113,7 @@ t_or = r'\|'
 t_dots = r'\.\.\.'
 t_underscore = r'\_'
 t_at = r'\@'
-t_str = r'(?V1)(\".*?\"|«.*?»|„.*?“)'
+t_str = r'(?V1)(\".*?\"|«.*?»|„.*?“|\'.*?\')'
 
 t_notequal = r'(!=|~=|<>|=!=)'
 t_equal = r'(=|==)'
@@ -136,7 +144,7 @@ def t_colon(t):
     return t
 
 
-id_regex = r'(?V1)(?![\"\[\]\s\&\d\:@!<>=~\|_\.\-\+«»„“「」『』（）])[[\w*]--[@\s\:\&\|!<>=~\.\+«»„“「」『』\[\]\(\)_]]+'
+id_regex = r'(?V1)(?![\"\'\[\]\s\&\d\:@!<>=~\|_\.\-\+«»„“「」『』（）])[[\w*]--[@\s\:\&\'\"\|!<>=~\.\+«»„“「」『』\[\]\(\)_]]+'
 
 
 @TOKEN(id_regex)

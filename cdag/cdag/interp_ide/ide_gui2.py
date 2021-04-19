@@ -212,7 +212,9 @@ class MainDialog(QMainWindow):
         self.runl = QtWidgets.QGroupBox()
         rlayout = QtWidgets.QHBoxLayout()
         self.rb = QtWidgets.QPushButton("Run")
-        self.rb.setStyleSheet('QPushButton {background-color: #46ab13; color: #ffffff; max-width: 80px; max-height: 30px;}')
+        self.runb_activestyle = 'QPushButton {background-color: #46ab13; color: #ffffff; max-width: 80px; max-height: 30px;}'
+        self.runb_deactivestyle = 'QPushButton {background-color: #8b9f82; color: #434741; max-width: 80px; max-height: 30px;}'
+        self.rb.setStyleSheet(self.runb_activestyle)
         self.rb.setFocusPolicy(Qt.NoFocus)
         rlayout.addWidget(self.rb)
         self.runl.setLayout(rlayout)
@@ -231,10 +233,10 @@ class MainDialog(QMainWindow):
         self.right_layout.setLayout(lrl)
 
         # StatusBar
-        self.sbar = QStatusBar()
-        self.setStatusBar(self.sbar)
-        self.sbarll = self.statusbarlanguagelabel()
-        self.sbar.addWidget(self.sbarll)
+        #self.sbar = QStatusBar()
+        #self.setStatusBar(self.sbar)
+        #self.sbarll = self.statusbarlanguagelabel()
+        #self.sbar.addWidget(self.sbarll)
 
         # Button click dynamics
         self.tabwidget = QTabWidget()
@@ -298,7 +300,6 @@ class MainDialog(QMainWindow):
             ccode.setTextCursor(cursor_)
 
             self.tabwidget.currentWidget().textChanged.connect(self.onchangetext)
-            self.setsbar()
         except FileNotFoundError as error:
             pass
 
@@ -328,7 +329,6 @@ class MainDialog(QMainWindow):
         cursor_.movePosition(QTextCursor.Start)
         new_tab.setTextCursor(cursor_)
         self.tabwidget.currentWidget().textChanged.connect(self.onchangetext)
-        self.setsbar()
 
     @Slot()
     def onclicksaveb(self):

@@ -114,13 +114,44 @@ class ActionsInterp:
         return all([[any([i.isnumeric(), i in ['.', 'e']]) for i in x], len(x.split('.')) == 2])
 
     def input_handler(self, x):
-        new_x = x
-        rfa = regex.findall(lex.t_str, x)
-        for i in rfa:
-            new_x = new_x.replace(i, '')
-        new_x = new_x.split(' ')
-        new_x = [i for i in new_x if len(i) > 0]
-        new_x.extend(rfa)
+        #new_x = x
+        #rfa = regex.findall(lex.t_str, x)
+        #for i in rfa:
+        #    new_x = new_x.replace(i, '')
+        #new_x = new_x.split(' ')
+        #new_x = [i for i in new_x if len(i) > 0]
+        #new_x.extend(rfa)
+
+        new_x = []
+        n_ = 0
+        m_ = 0
+        subx = []
+        for i in x:
+            if i == '"':
+                if n_ == 0:
+                    n_ = 1
+                    subx.append(i)
+                else:
+                    n_ = 0
+                    subx.append(i)
+                    new_x.append(''.join(subx))
+                    subx = []
+            else:
+                if i != ' ':
+                    subx.append(i)
+                elif i == ' ':
+                    if n_ == 0:
+                        if m_ == 0:
+                            m_ = 1
+                        else:
+                            m_ = 0
+                            new_x.append(''.join(subx))
+                            subx = []
+                    else:
+                        subx.append(i)
+        if len(subx) > 0:
+            new_x.append(''.join(subx))
+            subx = []
         res = []
         for i in new_x:
             if i[0] == '"':
@@ -332,7 +363,7 @@ class ActionsInterp:
         print(' '.join(res))
 
     def action_inputs2(self, code_id, prev_subj, subj, next_subj, obj, attr, pos_attr):
-        answer = input()
+        answer = input('> ')
         w_list = self.input_handler(answer)
         if len(w_list) == len(obj) and len(obj) == len(attr):
             for o, w, a in zip(obj, w_list, attr):
@@ -358,7 +389,7 @@ class ActionsInterp:
     ###########################
 
     def check_loop_expr(self, code_id, subj, x):
-        val_p = ''
+        val_p = 1
         if isinstance(x[-1], tuple):
             if self.check_obj(x[-1][0]):
                 ref_v = '_'.join([code_id, 'attr', subj, x[-1][0]])
@@ -366,7 +397,7 @@ class ActionsInterp:
             else:
                 val_f = x[-1][0]
             if x[-1][1] == '%':
-                val_p = 'mod'
+                val_p = x[-1][2]
         else:
             if self.check_obj(x[-1]):
                 ref_v = '_'.join([code_id, 'attr', subj, x[-1]])
@@ -399,7 +430,10 @@ class ActionsInterp:
                             var = o['var_loop'][0]
                             _v += (var,)
                 new_res = []
-                for ol in range(oloop[0], oloop[1] + 1, oloop[2] or 1):
+                loopspan = oloop[2] if oloop[0] < oloop[1] else -oloop[2]
+                li = oloop[0]
+                lf = (oloop[1] - 1) if oloop[1] < oloop[0] else (oloop[1] + 1)
+                for ol in range(li, lf, loopspan):
                     if len(_v) == 2:
                         new_res.append(_v[0] + str(ol))
                     else:
@@ -477,12 +511,15 @@ class ActionsInterp:
                       deep=0,
                       aux=False):
         for i0, i in enumerate(x):
+            #print('-'*(deep+1), f'1loop {deep}')
             if isinstance(i, tuple):
+                #print('-'*(deep+1), f'tuple {deep}')
                 r = self.execute_parse(code_id, i, full_x, prev_subj, subj, next_subj, act, attr,
                                        obj,
                                        pos_attr, var_loop, loop_vals, inside_loop,
                                        deep + 1, aux)
             elif isinstance(i, dict):
+                #print('-' * (deep + 1), f'dict {deep}')
                 if 'subject' in i.keys():
                     prev_subj = subj
                     subj = i['subject'][0]
@@ -495,11 +532,13 @@ class ActionsInterp:
                             obj = self.define_obj_loop(code_id, subj, obj, i['obj_loop'])
                         if 'attr_loop' in i.keys():
                             attr = self.define_obj_loop(code_id, subj, attr, i['attr_loop'])
+                        #print(obj, attr)
                     else:
                         var_loop = obj[1]['subject'][0]['var_loop'][0]
                         loop_vals = i['obj_loop']
                         inside_loop = True
                     if len(obj) > 0:
+                        #print('-' * (deep + 1), f'obj>0 {deep}')
                         if obj[0] in ['with', 'if']:
                             if act in self.actions_dict.keys():
                                 next_subj = obj[1][0]["subject"][0]
@@ -508,7 +547,6 @@ class ActionsInterp:
                             aux = True
                             obj_subj = [o1 + 1 for o1, o in enumerate(obj) if o in ['with', 'if']]
                             if len(obj_subj) == len(attr):
-                                # print('len obj_subj == len attr')
                                 pass
                             for idx, sa in enumerate(zip(obj_subj, attr)):
                                 next_subj = obj[sa[0]][0]["subject"][0]
@@ -520,9 +558,12 @@ class ActionsInterp:
                             aux = False
                             idx = None
                         else:
+                            #print('-' * (deep + 1), f'no-with/if action {act} {deep}')
                             if act in self.actions_dict.keys():
+                                #print('-' * (deep + 1), f'action detec {act} {deep}')
                                 self.actions_dict[act](code_id, prev_subj, subj, next_subj, obj,
                                                        attr, pos_attr)
+                            #print('-' * (deep + 1), f'outside action if {deep}')
                         if next_subj is not None and aux:
                             sb = '_'.join([code_id, 'subj', next_subj])
                             if self.code_info[sb]['type'] != 'main':

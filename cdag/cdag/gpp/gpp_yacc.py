@@ -61,7 +61,7 @@ def p_action0(p):
             if len(p[5]) > 1:
                 if len(p[5][1]) == 4 and isinstance(p[5][1], tuple):
                     if p[5][1][0] == '_':
-                        p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5][1]})
+                        p[0] = nonull({'action': (p[1],), 'object': p[3], 'obj_loop': p[5][1]})
                     else:
                         p[0] = nonull({'action': (p[1],), 'object': p[3]}) + p[5]
                 else:
@@ -82,8 +82,10 @@ def p_action1(p):
                 | extendaction lbracket superobject rbracket loop1
                 | extendaction lbracket superobject rbracket loop1 action
                 | extendaction lbracket superobject rbracket as attrX
+                | extendaction lbracket superobject rbracket as attrX loop1
                 | extendaction lbracket superobject rbracket as attrX action
                 | extendaction lbracket superobject rbracket loop1 as attrX
+                | extendaction lbracket superobject rbracket as attrX loop1 action
                 | extendaction lbracket superobject rbracket loop1 as attrX action
                 | extendaction lbracket superobject rbracket loop1 as attrX loop1
                 | extendaction lbracket superobject rbracket loop1 as attrX loop1 action"""
@@ -95,10 +97,12 @@ def p_action1(p):
         if isinstance(p[5], tuple):
             if len(p[5]) > 1:
                 if len(p[5][1]) == 4 and isinstance(p[5][1], tuple):
-                    if p[5][1][0] == '_':
+                    if p[5][0] == 'loop':
                         p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5][1]})
                 else:
-                    p[0] = ({'action': (p[1],), 'object': p[3]},) + p[5]
+                    if not isinstance(p[1], tuple):
+                        p[1] = (p[1],)
+                    p[0] = ({'action': p[1], 'object': p[3]},) + p[5]
             else:
                 p[0] = ({'action': (p[1],), 'object': p[3]},) + p[5]
         else:
@@ -126,7 +130,11 @@ def p_action1(p):
                         else:
                             p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6]}) + p[7]
                     else:
-                        p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6]}) + p[7]
+                        if isinstance(p[6], tuple):
+                            if 'loop' in p[6][0]:
+                                p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6], 'attr_loop': p[7][1]})
+                        else:
+                            p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6]}) + p[7]
                 else:
                     p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6]}) + p[7]
         else:
@@ -134,6 +142,9 @@ def p_action1(p):
     elif len(p) == 9:
         if isinstance(p[5], tuple) and len(p[5][1]) == 4 and p[5][1][0] == '_':
             if not isinstance(p[7], tuple):
+                #if 'attr_loop' in p[7][1].keys():
+                #    p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6], 'attr_loop': p[7][1]}) + p[8]
+                #else:
                 p[7] = (p[7],)
                 p[0] = nonull(
                         {'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': p[7]}) + p[8]
@@ -142,30 +153,40 @@ def p_action1(p):
                     if isinstance(p[7][1], dict):
                         if 'attr_loop' in p[7][1].keys():
                             x_ = {'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': (
-                            p[7][0],)}
-                            x_.update(p[7][1])
+                            p[7][0],), 'attr_loop': p[7][1]}
+                            #x_.update(p[7][1])
                             p[0] = (x_,) + p[8]
                         else:
                             p[0] = nonull(
                                 {'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': p[
                                     7]}) + p[8]
                     else:
-                        p[0] = nonull(
-                            {'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': p[7]}) + \
-                               p[8]
+                        if isinstance(p[7], tuple):
+                            if 'loop' in p[7][0]:
+                                p[0] = nonull({'action': p[1], 'object': p[3], 'attr': p[6], 'attr_loop': p[7][1]}) + p[8]
+                        else:
+                            p[0] = nonull(
+                                {'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': p[7]}) + \
+                                   p[8]
                 else:
                     p[0] = nonull(
                         {'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': p[7]}) + p[8]
         else:
             if isinstance(p[8], tuple) and len(p[8]) == 4:
-                if isinstance(p[8][1], tuple) and p[8][1][0] == '_':
+                if isinstance(p[8][1], tuple) and p[8][0] == 'loop':
                     p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5], 'attr': (p[7],), 'attr_loop': p[8][1]})
                 else:
                     p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5], 'attr': (
                     p[7],), 'attr_loop': p[8]})
             else:
-                p[0] = nonull(
-                    {'action': p[1], 'object': p[3], 'obj_loop': p[5], 'attr': (p[7],)}) + p[8]
+                if isinstance(p[7], tuple):
+                    if 'loop' in p[7][0]:
+                        p[0] = nonull(
+                            {'action': p[1], 'object': p[3], 'attr': p[6], 'attr_loop': p[7][1]}) + \
+                               p[8]
+                else:
+                    p[0] = nonull(
+                        {'action': p[1], 'object': p[3], 'obj_loop': p[5], 'attr': (p[7],)}) + p[8]
     elif len(p) == 10:
         p[0] = nonull({'action': p[1], 'object': p[3], 'obj_loop': p[5][1], 'attr': (p[7],), 'attr_loop': p[8][1]}) + p[9]
 
@@ -536,28 +557,13 @@ def p_attrx(p):
 def p_attr(p):
     """attr : id
             | superid
-            | superid loop1
             | id attrX"""
     if len(p) == 2:
         p[0] = p[1]
     elif len(p) == 3:
-        if p[2][0] == 'loop':
-            if isinstance(p[1], dict):
-                p[0] = p[1].update({'attr_loop': p[2][1]})
-            elif isinstance(p[1], tuple):
-                for d0, d in enumerate(p[1]):
-                    if isinstance(d, dict):
-                        p[1][d0].update({'attr_loop': p[2][1]})
-                        p[0] = p[1]
-                        break
-                if p[0] is None:
-                    p[0] = p[1] + ({'attr_loop': p[2][1]},)
-            else:
-                p[0] = p[1] + ({'attr_loop': p[2][1]},)
-        else:
-            if not isinstance(p[2], tuple):
-                p[2] = (p[2],)
-            p[0] = (p[1],) + p[2]
+        if not isinstance(p[2], tuple):
+            p[2] = (p[2],)
+        p[0] = (p[1],) + p[2]
 
 
 def p_loop1(p):
