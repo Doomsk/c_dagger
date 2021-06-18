@@ -1,6 +1,6 @@
 # currently used
-import gpp.yacc as yacc
-from gpp.gpp_lex import tokens, actions
+import cdag.gpp.yacc as yacc
+from cdag.gpp.gpp_lex import tokens, actions
 
 
 check_action = None
