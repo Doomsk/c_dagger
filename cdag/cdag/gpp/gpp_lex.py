@@ -1,5 +1,5 @@
-import gpp.lex as lex
-from gpp.lex import TOKEN
+import cdag.gpp.lex as lex
+from cdag.gpp.lex import TOKEN
 import re
 
 
