@@ -9,9 +9,9 @@ from PySide6.QtCore import (Slot, Qt, QRect, QSize, QRegularExpression,
 from PySide6.QtGui import (QColor, QBrush, QPainter, QTextFormat, QFont, QTextCursor,
                            QSyntaxHighlighter, QTextCharFormat, QPalette)
 from PySide6.QtWidgets import QPlainTextEdit, QWidget, QTextEdit, QLabel
-from interpreter.localization import (available_languages, from_code2lang, from_lang2code,
+from cdag.interpreter.localization import (available_languages, from_code2lang, from_lang2code,
                                       map_lang2code, map_code2lang, highlighting)
-from interpreter.interp import Interpreter
+from cdag.interpreter.interp import Interpreter
 
 # TODO:
 #  - this is the current version

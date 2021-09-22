@@ -1,6 +1,6 @@
 from interpreter.actions import ActionsInterp
 from interpreter.localization import map_lang2code, available_languages
-import gpp.gpp_yacc as g
+import gpp.gpp_yacc8 as g
 import hashlib
 import time
 import sys
@@ -59,15 +59,15 @@ class Interpreter(ActionsInterp):
 if __name__ == '__main__':
     ai = Interpreter()
 
-    code1 = """ main: sets [10 "hoi quantum!"] as v1 v7 
-                     applies [with x: maps [v1 4] & with y: maps [v7]] as v2 v6 
+    code1 = """ main: sets [10 "hoi quantum!"] as v1 v7
+                     applies [with x: maps [v1 4] & with y: maps [v7]] as v2 v6
                      adds [v2 5] as v3
-                     outputs [v3 v6] 
-               where x: sets [*v1 *v2] as v1 v2 
-                        multiplies [10 v1 v2] as v3 
+                     outputs [v3 v6]
+               where x: sets [*v1 *v2] as v1 v2
+                        multiplies [10 v1 v2] as v3
                         uses [v3]
-               where y: sets [*v1] as v1 
-                        adds [v1 " this" " is" " a" " test"] as v2 
+               where y: sets [*v1] as v1
+                        adds [v1 " this" " is" " a" " test"] as v2
                         uses [v2]"""
     r = ai.run(code1, time_delta=True)
     print(r)
@@ -76,15 +76,15 @@ if __name__ == '__main__':
     r2 = ai.run(code2, time_delta=True)
     print(r2)
 
-    code3 = """ main: seta [10 "oi quântico!"] como v1 v7 
-                         aplica [com x: mapeia [v1 4] & com y: mapeia [v7]] como v2 v6 
+    code3 = """ main: seta [10 "oi quântico!"] como v1 v7
+                         aplica [com x: mapeia [v1 4] & com y: mapeia [v7]] como v2 v6
                          adiciona [v2 5] como v3
-                         apresenta [v3 v6] 
-                   onde x: seta [*v1 *v2] como v1 v2 
-                            multiplica [10 v1 v2] como v3 
+                         apresenta [v3 v6]
+                   onde x: seta [*v1 *v2] como v1 v2
+                            multiplica [10 v1 v2] como v3
                             usa [v3]
-                   onde y: seta [*v1] como v1 
-                            adiciona [v1 " isso" " é" " um" " teste"] como v2 
+                   onde y: seta [*v1] como v1
+                            adiciona [v1 " isso" " é" " um" " teste"] como v2
                             usa [v2]"""
     r3 = ai.run(code3, time_delta=True, lang='pt')
     print(r3)

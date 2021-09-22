@@ -4,10 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/cdag/cdag" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.8 (qy2)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.9 (qy)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-  </component>
-  <component name="TestRunnerService">
-    <option name="PROJECT_TEST_RUNNER" value="Unittests" />
   </component>
 </module>

@@ -10,7 +10,7 @@ fff = os.path.abspath(os.getcwd())
 fff2 = os.path.basename(__file__)
 fff3 = pathlib.Path(__file__).parent.absolute()
 fff4 = os.path.dirname(os.path.abspath(__file__))
-gpp_yacc_file_name = "gpp_yacc8.py"
+gpp_yacc_file_name = os.path.join(fff4, "gpp_yacc8.py")
 lcbracket = '{'
 rcbracket = '}'
 tab = ' ' * 4
@@ -41,20 +41,13 @@ def next_func_enum(func_name, num=None):
 def generator(grammar, rule_code, this_func='sentence', replace=False, num=None):
     tab = ' ' * 4
     newl = '\n'
-    new_x = ''.join(grammar.split(':')[1:]).split(' ')
 
     if not replace:
         func_header = f"""def p_{this_func}_{next_func_enum(this_func, num=num)}"""
     else:
         func_header = f"""def p_{this_func}_{num}"""
 
-    code_, res, _ = recur9(rule_code)
-    # if 'res ' not in code_:
-    #    p0 = "p[0] = res2"
-    # elif f'{tab}res = (){newl}' == code_:
-    #    p0 = "pass"
-    # else:
-    #    p0 = "p[0] = res"
+    code_, res, _ = recur(rule_code)
     if 'pass' in code_:
         p0 = ""
     else:
@@ -67,341 +60,27 @@ def generator(grammar, rule_code, this_func='sentence', replace=False, num=None)
     return r
 
 
-def check_values(params):
-    find_floats = regex.findall(r'p\[\d+\.0\]', ''.join(params))
-    print(params, find_floats)
-    tab = ' ' * 4
-    newl = '\n'
-    text = ''
-    for i0, i in enumerate(params):
-        if len(find_floats) > 0:
-            for k in find_floats:
-                if k in i:
-                    new_k = k.replace('.0', '')
-                    new_i = i.replace('.0', '')
-                    text += f'{tab}if {new_k} is not None:{newl}{tab}{tab}res += {new_i}{newl}'
-                else:
-                    text += f'{tab}res += {i}{newl}'
-                break
-        else:
-            text = f"{tab}res = {' + '.join(params)}{newl}"
-    return text
-
-
-def recurser2(u, idx=0, ans=None):
-    text = ''
-    tab = ' ' * 4
-    newl = '\n'
-    res = None
-    r_tmp = []
-    t_tmp = ''
-    a_tmp = None
-    res_rec = []
-    res_tmp = []
-    res_dict = {}
-    if isinstance(u, dict) or isinstance(u, set):
-        if idx == 0:
-            text += f'{tab}res = dict(){newl}'
-        if isinstance(u, dict):
-            v = u.items()
-        elif isinstance(u, set):
-            v = u
-        else:
-            v = u
-        for i in v:
-            if isinstance(u, dict):
-                k, i = i[0], i[1]
-            if isinstance(i, tuple):
-                r_tmp, t_tmp, a_tmp = recurser2(i, idx=idx + 1, ans=ans)
-                res_tmp.append(r_tmp)
-            elif isinstance(i, list):
-                r_tmp, t_tmp, a_tmp = recurser2(i, idx=idx + 1, ans=ans)
-                res_tmp.append(r_tmp)
-            elif isinstance(i, int) or isinstance(i, float):
-                r_tmp, t_tmp, a_tmp = recurser2(i, idx=idx + 1, ans=ans)
-                res_tmp.append(r_tmp)
-            elif isinstance(i, dict):
-                res_rec = recurser2(i, idx=1)
-            elif isinstance(i, str):
-                r_tmp, t_tmp, a_tmp = recurser2(i, idx=idx + 1, ans=ans)
-                res_tmp.append(r_tmp)
-            res_rec = ' + '.join(res_tmp)
-            if isinstance(u, dict):
-                if k in ['subject', 'type', 'init', 'fin', 'var_loop', 'prop', 'ref', 'init_lim',
-                         'fin_lim']:
-                    text += f'{tab}res.update([("{k}", ({res_rec},))]){newl}'
-                else:
-                    text += f'{tab}res.update([("{k}", {res_rec})]){newl}'
-            else:
-                text += f'{tab}res.update({t_tmp}){newl}'
-            res_tmp = []
-        if a_tmp != 'tuple':
-            ans = 'dict'
-        res = f"{str(res_dict)}"
-
-    elif isinstance(u, tuple) or isinstance(u, list):
-        if isinstance(u, tuple):
-            ans = 'tuple'
-        else:
-            ans = None
-        if idx == 0:
-            if isinstance(u, tuple):
-                text += f"{tab}res2 = (){newl}"
-            elif isinstance(u, list):
-                text = f'{tab}res = (){newl}'
-
-        if len(u) > 1:
-            for i in u:
-                if isinstance(i, tuple):
-                    r_tmp, t_tmp, a_tmp = recurser2(i, idx=idx + 1, ans=ans)
-                    res_tmp.append(f"({r_tmp},)")
-                    if ans is not None:
-                        text += t_tmp
-                elif isinstance(i, list):
-                    r_tmp, t_tmp, a_tmp = recurser2(i, idx=idx + 1, ans=ans)
-                    res_tmp.append(r_tmp)
-                    text += t_tmp
-                elif isinstance(i, int) or isinstance(i, float):
-                    r_tmp, t_tmp, a_tmp = recurser2(i, idx=idx + 1, ans=ans)
-                    res_tmp.append(r_tmp)
-                    if a_tmp == 'dict':
-                        text += f"{tab}res.update({t_tmp}){newl}"
-                    elif a_tmp == 'tuple':
-                        text += f"{tab}res2 += {t_tmp}{newl}"
-                    else:
-                        pass
-                elif isinstance(i, dict) or isinstance(i, set):
-                    text += f'{tab}res = dict(){newl}'
-                    r_tmp, t_tmp, a_tmp = recurser2(i, idx=idx + 1, ans=ans)
-                    res_tmp.append(r_tmp)
-                    ans = a_tmp
-                    text += t_tmp
-                elif isinstance(i, str):
-                    r_tmp, t_tmp, a_tmp = recurser2(i, idx=idx + 1, ans=ans)
-                    res_tmp.append(r_tmp)
-
-            if isinstance(u, tuple):
-                if ans is None:
-                    res = f"{' + '.join(res_tmp)}"
-                elif ans == 'tuple':
-                    res = f"{' + '.join(res_tmp)}"
-                    if 'res = dict()' in text:
-                        text += f"{tab}res = (res,) + res2{newl}"
-                    else:
-                        text += f"{tab}res = res2{newl}"
-                elif ans == 'dict':
-                    res = f"{' + '.join(res_tmp)}"
-            elif isinstance(u, list):
-                if ans is None:
-                    ##### write here checking
-                    # res = f"{' + '.join(res_tmp)}"
-                    # print(u, res)
-                    # text += f'{tab}res = {res}{newl}'
-                    print('aeo', res_tmp)
-                    text += check_values(res_tmp)
-                    print(text)
-                    res = text
-                elif ans == 'tuple':
-                    pass
-                elif ans == 'dict':
-                    res = f"{' + '.join(res_tmp)}"
-        elif len(u) == 1 and isinstance(u, tuple):
-            if isinstance(u[0], int):
-                r_tmp, t_tmp, a_tmp = recurser2(u[0], idx=idx + 1, ans=ans)
-                res_tmp.append(r_tmp)
-                if a_tmp == 'tuple':
-                    text += f"{tab}res2 += ({t_tmp},){newl}"
-                else:
-                    print('io', t_tmp)
-                    text += f"{tab}res = {t_tmp}{newl}"
-                res = f"{' + '.join(res_tmp)}"
-            elif isinstance(u[0], float):
-                r_tmp, t_tmp, a_tmp = recurser2(u[0], idx=idx + 1, ans=ans)
-                res_tmp.append(r_tmp)
-                # print(res_tmp, t_tmp)
-                text += check_values(res_tmp)
-            elif isinstance(u[0], str):
-                r_tmp, t_tmp, a_tmp = recurser2(u[0], idx=idx + 1, ans=ans)
-                res_tmp.append(r_tmp)
-                res = f"{' + '.join(res_tmp)}"
-            else:
-                r_tmp, t_tmp, a_tmp = recurser2(u[0], idx=idx + 1, ans=ans)
-                res_tmp.append(r_tmp)
-                text += f"{t_tmp}{tab}res2 = (res,){newl}"
-                res = f"{' + '.join(res_tmp)}"
-        else:
-            if ans == 'dict':
-                text = f'{tab}res = dict(){newl}'
-            else:
-                text = f'{tab}res = (){newl}'
-            res = text
-            return res, text, ans
-    elif isinstance(u, int) or isinstance(u, float):
-        if idx == 0:
-            return f"{tab}res = p[{u}]{newl}", f"{tab}res = p[{u}]{newl}", ans
-        return f"p[{u}]", f"p[{u}]", ans
-    elif isinstance(u, str):
-        return f'"{u}"', f'"{u}"', ans
-    else:
-        print('woololo')
-        return u, u, ''
-    return res, text, ans
-
-
-def init_recur8(tp, idx=0):
-    p = ''
-    if tp == tuple:
-        p = '()'
-    elif tp == dict:
-        p = 'dict()'
-    elif tp in [str, int, float, None]:
-        # p = '""'
-        return ""
-    return f"{tab}res{idx} = {p}{newl}"
-
-
-def type8(value):
+def check_type(value):
     if value is None:
         return None
     else:
         return type(value)
 
 
-def istp8(value, tp):
+def is_type(value, tp):
     return isinstance(value, tp)
 
 
-def priority8(value):
-    listtype = any([istp8(i, list) for i in value])
-    tupletype = any([istp8(i, tuple) for i in value])
-    dicttype = any([istp8(i, dict) for i in value])
-    strtype = any([istp8(i, str) for i in value])
-    if dicttype:
-        return dict
-    elif tupletype:
-        return tuple
-    elif strtype:
-        return str
-    else:
-        return None
-
-
-def super_sum8(value, idx, tp0, tp1, tp2, enum):
-    pre_text = ""
-    additive_sign = '' if enum == 0 else '+'
-    full_text = ""
-    if tp2 == float:
-        pre_text = f"{tab}if {value} is not None:{newl}{tab}"
-    # elif tp2 == tuple:
-    #    value = f"({value},)"
-    else:
-        if tp2 not in [int, dict, list, tuple, str]:
-            return full_text
-
-    if (tp0 == list or tp0 is None) and tp1 == dict:
-        text = f"{idx}.update({value})"
-    elif tp0 == dict:
-        text = f"{idx}.update({value})"
-    elif (tp0 == tuple and tp1 == dict) or tp1 == tuple or tp1 == list or tp1 == int or tp1 == str:
-        text = f"{idx} {additive_sign}= {value}"
-    full_text = f"{pre_text}{tab}res{text}{newl}"
-    return full_text
-
-
-def recur8(u, idx=0, ans=None):
-    text = ''
-    res = None
-    if istp8(u, list):
-        u_type = priority8(u)
-    else:
-        u_type = type8(u)
-    text += init_recur8(u_type, idx)
-
-    if istp8(u, tuple) or istp8(u, list):
-        for i0, i in enumerate(u):
-            ttmp, rtmp, atmp = recur8(i, idx + 1, type8(i))
-            if atmp in [list, tuple]:  # , dict]:
-                text += ttmp
-                # if atmp == tuple or ans == tuple or type8(u) == tuple:
-                if type8(u) == tuple or type(i) == tuple:
-                    rtmp = f"({rtmp},)"
-                if atmp != dict or u_type != dict:
-                    text += f"{tab}res{idx} += {rtmp}{newl}"
-                else:
-                    text += f"{tab}res{idx}.update({rtmp}){newl}"
-            elif atmp == dict:
-                t_ = super_sum8(rtmp, idx, ans, type8(u), atmp, i0)
-                text += t_
-                if ans == dict:
-                    text += f"{tab}res{idx}.update({rtmp}){newl}"
-            else:
-                if u_type == dict:
-                    vtype = dict
-                else:
-                    vtype = type8(u)
-                t_ = super_sum8(rtmp, idx, ans, vtype, atmp, i0)
-                text += t_
-        res = f"res{idx}"
-
-    elif istp8(u, dict):
-        for k, i in u.items():
-            ttmp, rtmp, atmp = recur8(i, idx + 1, type8(i))
-            text += ttmp
-            if ans in [dict, None]:
-                new_rtmp = f"[(\"{k}\", ({rtmp},))]"
-                # print(new_rtmp, idx, ans, type8(u), atmp)
-                text += super_sum8(new_rtmp, idx, ans, type8(u), atmp, None)
-        res = f"res{idx}"
-    elif istp8(u, str):
-        res = f'"{u}"'
-        if idx != 0:
-            text = ''
-        else:
-            text = f"{tab}res0 = {res}{newl}"
-        ans = type8(u)
-    elif istp8(u, int):
-        res = f"p[{u}]"
-        if idx != 0:
-            text = ''
-        else:
-            text = f"{tab}res0 = {res}{newl}"
-        ans = type8(u)
-    elif istp8(u, float):
-        res = f"p[{int(u)}]"
-        if idx != 0:
-            text = ''
-        else:
-            text = f"{tab}res0 = {res}{newl}"
-        ans = type8(u)
-    else:
-        print('woololo')
-
-    if text == f'{tab}res0 = (){newl}':
-        text = f'{tab}pass{newl}'
-    return text, res, ans
-
-
-def type9(value):
-    if value is None:
-        return None
-    else:
-        return type(value)
-
-
-def istp9(value, tp):
-    return isinstance(value, tp)
-
-
-def priority9(value):
+def priority(value):
     types = [dict, tuple, str]
     for i in value:
         for y in types:
-            if istp9(i, y):
+            if is_type(i, y):
                 return y
     return None
 
 
-def init9(tp):
+def init(tp):
     if tp == dict:
         return "dict()"
     elif tp == tuple:
@@ -410,62 +89,62 @@ def init9(tp):
         return "\"\""
 
 
-def inc9(value, tp):
+def inc(value, tp):
     if tp == dict:
         return f".update({value})"
     else:
         return f" += {value}"
 
 
-def recur9(u, idx=0):
+def recur(u, idx=0):
     res = ''
     text = ''
-    ans = type9(u)
-    if not istp9(u, int) and not istp9(u, float) and not istp9(u, list):
-        text = f"{tab}res{idx} = {init9(ans)}{newl}"
-    if istp9(u, list):
-        ktype = priority9(u)
+    ans = check_type(u)
+    if not is_type(u, int) and not is_type(u, float) and not is_type(u, list):
+        text = f"{tab}res{idx} = {init(ans)}{newl}"
+    if is_type(u, list):
+        ktype = priority(u)
         for i0, k in enumerate(u):
-            ttmp, rtmp, atmp = recur9(k, idx + 1)
+            ttmp, rtmp, atmp = recur(k, idx + 1)
             text += ttmp
             value = rtmp
             res = f"res{idx}"
             if i0 == 0:
                 text += f"{tab}{res} = {value}{newl}"
             else:
-                text += f"{tab}{res}{inc9(value, ktype)}{newl}"
-    elif istp9(u, tuple):
+                text += f"{tab}{res}{inc(value, ktype)}{newl}"
+    elif is_type(u, tuple):
         if len(u) > 0:
             for k in u:
-                ktype = type9(k)
-                ttmp, rtmp, atmp = recur9(k, idx + 1)
+                ktype = check_type(k)
+                ttmp, rtmp, atmp = recur(k, idx + 1)
                 text += ttmp
                 value = f"({rtmp},)"
                 res = f"res{idx}"
-                text += f"{tab}{res}{inc9(value, ans)}{newl}"
+                text += f"{tab}{res}{inc(value, ans)}{newl}"
         else:
             text = f"{tab}pass{newl}"
-    elif istp9(u, dict):
+    elif is_type(u, dict):
         for k, v in u.items():
-            vtype = type9(v)
-            ttmp, rtmp, atmp = recur9(v, idx + 1)
+            vtype = check_type(v)
+            ttmp, rtmp, atmp = recur(v, idx + 1)
             text += ttmp
             value = f"[(\"{k}\", {rtmp})]"
             res = f"res{idx}"
-            text += f"{tab}{res}{inc9(value, ans)}{newl}"
-    elif istp9(u, str):
+            text += f"{tab}{res}{inc(value, ans)}{newl}"
+    elif is_type(u, str):
         res = f"\"{u}\""
         if idx == 0:
             text = f"{tab}res0 = {res}{newl}"
         else:
             text = ''
-    elif istp9(u, int):
+    elif is_type(u, int):
         res = f"p[{u}]"
         if idx == 0:
             text = f"{tab}res0 = {res}{newl}"
         else:
             text = ''
-    elif istp9(u, float):
+    elif is_type(u, float):
         res = f"p[{int(u)}]"
         if idx == 0:
             text = f"{tab}res0 = {res}{newl}"
@@ -603,7 +282,7 @@ def parse(data, debug=0):
     if p is None:
         return -11
     return p
-    
+
     """
     if replace:
         k = 'w'
@@ -628,9 +307,14 @@ def runny9():
     c.append("""j: sets [*v$k v$e]_k...[1 3]_e...[5 10] as v$c_c...(0 4) v$y_y...[5 11)""")
 
     for i0, i in enumerate(c):
-        print(i0, ';', i, '-->')
+        white_space = " "*(len(str(i0)) + 2)
+        print(f'{i0}) code=\n{2*white_space}{i}')
         try:
-            print(json.dumps(g8.parse(i), indent=2))
+            print(f'{white_space}parse=\n{2*white_space}{g8.parse(i)}\n{"-"*60}')
         except Exception as e:
-            print(f'*** Error: {e}')
+            print(f'{white_space}parse=\n{2*white_space}*** Error: {e}\n{"-"*60}')
+
+
+if __name__ == '__main__':
+    runny9()
 
